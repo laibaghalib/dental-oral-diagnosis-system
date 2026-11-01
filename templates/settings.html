@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings — DentalAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── THEME VARIABLES ── */
+    :root {
+      --bg:        #f7f5f0;
+      --surface:   #ffffff;
+      --border:    rgba(0,0,0,0.09);
+      --border-md: rgba(0,0,0,0.15);
+      --text:      #1a1814;
+      --muted:     #6b6760;
+      --accent:    #1a5c40;
+      --accent-lt: #e8f5ee;
+      --danger:    #a32d2d;
+      --danger-lt: #fcebeb;
+      --radius:    12px;
+      --radius-sm: 8px;
+    }
+    [data-theme="dark"] {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --border:    rgba(255,255,255,0.08);
+      --border-md: rgba(255,255,255,0.14);
+      --text:      #e8e6e1;
+      --muted:     #8b8680;
+      --accent:    #2d9e6b;
+      --accent-lt: #0d2a1c;
+      --danger:    #c0392b;
+      --danger-lt: #2a0d0d;
+    }
+
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+    nav { background: var(--surface); border-bottom: 0.5px solid var(--border-md); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; transition: background 0.3s; }
+    .nav-logo { font-family: 'DM Serif Display', serif; font-size: 1.3rem; color: var(--accent); }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { font-size: 0.875rem; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--accent); font-weight: 500; }
+
+    .page-wrap { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 { font-family: 'DM Serif Display', serif; font-size: 2rem; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+    .page-header p  { font-size: 0.9rem; color: var(--muted); }
+
+    .settings-layout { display: grid; grid-template-columns: 180px 1fr; gap: 1.5rem; align-items: start; }
+    @media (max-width: 640px) { .settings-layout { grid-template-columns: 1fr; } }
+
+    .sidebar { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; position: sticky; top: 80px; transition: background 0.3s; }
+    .sidebar-tab { width: 100%; padding: 0.85rem 1.1rem; border: none; background: none; text-align: left; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 500; color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 0.6rem; border-left: 3px solid transparent; transition: all 0.15s; }
+    .sidebar-tab:hover { color: var(--text); background: var(--bg); }
+    .sidebar-tab.active { color: var(--accent); background: var(--accent-lt); border-left-color: var(--accent); }
+    .sidebar-divider { height: 0.5px; background: var(--border); }
+
+    .panel { display: none; }
+    .panel.active { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .s-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: background 0.3s; }
+    .s-card-head { padding: 0.875rem 1.25rem; border-bottom: 0.5px solid var(--border); }
+    .s-card-head h2 { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+    .s-card-head p  { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+    .s-card-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+    .card-footer { padding: 0.875rem 1.25rem; border-top: 0.5px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+    .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+    .form-group label { font-size: 0.78rem; font-weight: 500; color: var(--muted); }
+    .form-group input,
+    .form-group select { padding: 0.55rem 0.75rem; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: var(--text); background: var(--bg); transition: border-color 0.15s, background 0.3s, color 0.3s; width: 100%; }
+    .form-group input:focus,
+    .form-group select:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+
+    /* Avatar */
+    .avatar-row { display: flex; align-items: center; gap: 1.25rem; }
+    .avatar-circle { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #1a5c40, #2d8f64); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: white; flex-shrink: 0; overflow: hidden; }
+    .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-info h3 { font-size: 0.95rem; font-weight: 600; }
+    .avatar-info p  { font-size: 0.8rem; color: var(--muted); margin-top: 0.1rem; }
+
+    /* Stats card */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+    .stat-box { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; text-align: center; }
+    .stat-box .stat-num { font-family: 'DM Serif Display', serif; font-size: 1.6rem; font-weight: 400; color: var(--accent); line-height: 1; }
+    .stat-box .stat-lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.3rem; }
+
+    /* Theme switcher */
+    .theme-options { display: flex; gap: 0.75rem; }
+    .theme-btn { flex: 1; padding: 0.65rem; border-radius: var(--radius-sm); border: 0.5px solid var(--border-md); background: var(--bg); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: all 0.15s; }
+    .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .theme-btn.active { background: var(--accent-lt); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+    /* Password strength */
+    .pw-strength { height: 3px; border-radius: 100px; margin-top: 4px; background: var(--bg); overflow: hidden; }
+    .pw-strength-fill { height: 100%; border-radius: 100px; width: 0%; transition: width 0.3s, background 0.3s; }
+
+    /* Danger zone */
+    .danger-zone { border: 0.5px solid rgba(163,45,45,0.25); border-radius: var(--radius); overflow: hidden; }
+    .danger-zone .s-card-head { background: var(--danger-lt); }
+    .danger-zone .s-card-head h2 { color: var(--danger); }
+    .delete-confirm { display: none; margin-top: 0.75rem; padding: 1rem; background: var(--danger-lt); border: 0.5px solid rgba(163,45,45,0.2); border-radius: var(--radius-sm); }
+    .delete-confirm.show { display: block; }
+    .delete-confirm p { font-size: 0.825rem; color: var(--danger); margin-bottom: 0.75rem; line-height: 1.5; }
+    .delete-confirm input { width: 100%; padding: 0.55rem 0.75rem; border: 0.5px solid rgba(163,45,45,0.3); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 0.875rem; background: var(--surface); color: var(--text); margin-bottom: 0.75rem; }
+    .delete-confirm input:focus { outline: none; border-color: var(--danger); }
+
+    /* Buttons */
+    .btn-primary { padding: 0.65rem 1.25rem; border: none; border-radius: var(--radius-sm); background: var(--accent); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: opacity 0.15s; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-outline { padding: 0.65rem 1.25rem; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); background: transparent; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: background 0.15s; }
+    .btn-outline:hover { background: var(--bg); }
+    .btn-danger { padding: 0.65rem 1.25rem; border: 0.5px solid rgba(163,45,45,0.3); border-radius: var(--radius-sm); background: transparent; color: var(--danger); font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: background 0.15s; }
+    .btn-danger:hover { background: var(--danger-lt); }
+
+    /* Spinner */
+    .spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast-item { background: var(--text); color: var(--bg); padding: 0.7rem 1.1rem; border-radius: var(--radius-sm); font-size: 0.85rem; animation: slideIn 0.3s ease; max-width: 280px; }
+    .toast-item.success { background: var(--accent); color: #fff; }
+    .toast-item.error   { background: var(--danger); color: #fff; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 640px) {
+      .sidebar { position: static; display: flex; border-radius: var(--radius); overflow-x: auto; }
+      .sidebar-tab { border-left: none; border-bottom: 3px solid transparent; flex: 1; justify-content: center; white-space: nowrap; }
+      .sidebar-tab.active { border-left: none; border-bottom-color: var(--accent); }
+      .sidebar-divider { display: none; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">DentAI</span>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/analyze">Analyze</a>
+    <a href="/history">History</a>
+    <a href="/settings" class="active">Settings</a>
+    <button onclick="toggleTheme()" id="theme-toggle" title="Toggle theme"
+      style="background:none;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:0.35rem 0.6rem;cursor:pointer;font-size:1rem;color:var(--muted);transition:all 0.15s;line-height:1;">🌙</button>
+    <a href="/auth/logout">Sign out</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1>Settings</h1>
+    <p>Manage your profile and account security.</p>
+  </div>
+
+  <div class="settings-layout">
+
+    <div class="sidebar">
+      <button class="sidebar-tab active" onclick="switchTab('profile', this)">👤 Profile</button>
+      <div class="sidebar-divider"></div>
+      <button class="sidebar-tab" onclick="switchTab('account', this)">🔐 Account</button>
+    </div>
+
+    <div id="panels">
+
+      <!-- ═══ PROFILE ═══ -->
+      <div class="panel active" id="panel-profile">
+
+        <!-- Personal info -->
+        <div class="s-card">
+          <div class="s-card-head">
+            <h2>Personal Information</h2>
+            <p>Your name and basic details used across the platform.</p>
+          </div>
+          <div class="s-card-body">
+            <div class="avatar-row">
+              <div class="avatar-circle" id="avatar-display">
+                {% if current_user.avatar %}
+                  <img src="{{ current_user.avatar }}" alt="Avatar"/>
+                {% else %}
+                  {{ current_user.initials }}
+                {% endif %}
+              </div>
+              <div class="avatar-info">
+                <h3 id="avatar-name">{{ current_user.full_name }}</h3>
+                <p>{{ current_user.email }}</p>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>First Name</label>
+                <input type="text" id="s-first-name" placeholder="First name" value="{{ current_user.first_name }}"/>
+              </div>
+              <div class="form-group">
+                <label>Last Name</label>
+                <input type="text" id="s-last-name" placeholder="Last name" value="{{ current_user.last_name }}"/>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Phone</label>
+                <input type="tel" id="s-phone" placeholder="+92 300 0000000"/>
+              </div>
+              <div class="form-group">
+                <label>Gender</label>
+                <select id="s-gender">
+                  <option value="">— Select —</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                  <option>Prefer not to say</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="max-width:220px;">
+              <label>Date of Birth</label>
+              <input type="date" id="s-dob"/>
+            </div>
+          </div>
+          <div class="card-footer">
+            <button class="btn-primary" id="save-profile-btn" onclick="saveProfile()">
+              <span class="spinner" id="sp-profile"></span>
+              Save Profile
+            </button>
+          </div>
+        </div>
+
+        <!-- Scan Statistics -->
+        <div class="s-card">
+          <div class="s-card-head">
+            <h2>Your Scan Statistics</h2>
+            <p>A summary of your dental analysis history.</p>
+          </div>
+          <div class="s-card-body">
+            <div class="stats-grid">
+              <div class="stat-box">
+                <div class="stat-num" id="stat-total">—</div>
+                <div class="stat-lbl">Total Scans</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-num" id="stat-condition" style="font-size:0.85rem;padding-top:0.3rem;">—</div>
+                <div class="stat-lbl">Most Common</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-num" id="stat-last" style="font-size:0.82rem;padding-top:0.3rem;">—</div>
+                <div class="stat-lbl">Last Scan</div>
+              </div>
+            </div>
+            <a href="/history" style="font-size:0.82rem;color:var(--accent);text-decoration:none;font-weight:500;">View full history →</a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══ ACCOUNT ═══ -->
+      <div class="panel" id="panel-account">
+
+        <!-- Change Password -->
+        <div class="s-card">
+          <div class="s-card-head">
+            <h2>Change Password</h2>
+            <p id="pw-subtitle">Update your account password.</p>
+          </div>
+          <div class="s-card-body">
+            <div class="form-group" id="current-pw-wrap">
+              <label>Current Password</label>
+              <input type="password" id="s-current-pw" placeholder="Enter current password"/>
+            </div>
+            <div class="form-group">
+              <label>New Password</label>
+              <input type="password" id="s-new-pw" placeholder="Min. 8 characters" oninput="checkPwStrength()"/>
+              <div class="pw-strength"><div class="pw-strength-fill" id="pw-fill"></div></div>
+            </div>
+            <div class="form-group">
+              <label>Confirm New Password</label>
+              <input type="password" id="s-confirm-pw" placeholder="Repeat new password"/>
+            </div>
+          </div>
+          <div class="card-footer">
+            <button class="btn-primary" onclick="changePassword()">
+              <span class="spinner" id="sp-pw"></span>
+              Update Password
+            </button>
+          </div>
+        </div>
+
+        <!-- Account Details -->
+        <div class="s-card">
+          <div class="s-card-head">
+            <h2>Account Details</h2>
+            <p>Your login method and account creation date.</p>
+          </div>
+          <div class="s-card-body" style="gap:0.5rem;">
+            <div style="display:flex;justify-content:space-between;font-size:0.875rem;padding:0.5rem 0;border-bottom:0.5px solid var(--border);">
+              <span style="color:var(--muted);">Email</span>
+              <span style="font-weight:500;">{{ current_user.email }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.875rem;padding:0.5rem 0;border-bottom:0.5px solid var(--border);">
+              <span style="color:var(--muted);">Login Method</span>
+              <span style="font-weight:500;">{% if current_user.google_id %}Google OAuth{% else %}Email & Password{% endif %}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.875rem;padding:0.5rem 0;">
+              <span style="color:var(--muted);">Member Since</span>
+              <span style="font-weight:500;">{{ current_user.created_at.strftime('%d %b %Y') }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="s-card danger-zone">
+          <div class="s-card-head">
+            <h2>⚠️ Danger Zone</h2>
+            <p>Irreversible actions — proceed with caution.</p>
+          </div>
+          <div class="s-card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+              <div>
+                <div style="font-size:0.875rem;font-weight:500;">Delete Account</div>
+                <div style="font-size:0.775rem;color:var(--muted);margin-top:0.1rem;">Permanently delete your account, all scans and history.</div>
+              </div>
+              <button class="btn-danger" onclick="toggleDeleteConfirm()">Delete Account</button>
+            </div>
+            <div class="delete-confirm" id="delete-confirm">
+              <p>This will permanently delete your account and all data. Type <strong>DELETE</strong> to confirm.</p>
+              <input type="text" id="delete-confirm-input" placeholder="Type DELETE to confirm"/>
+              <div style="display:flex;gap:0.75rem;">
+                <button class="btn-outline" onclick="toggleDeleteConfirm()">Cancel</button>
+                <button class="btn-danger" onclick="deleteAccount()">
+                  <span class="spinner" id="sp-delete"></span>
+                  Permanently Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ── Apply saved theme immediately ── */
+(function() {
+  const t = localStorage.getItem('dental-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+})();
+
+/* ── Tab switching ── */
+function switchTab(name, btn) {
+  document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+/* ── Theme ── */
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('dental-theme', theme);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next    = current === 'light' ? 'dark' : 'light';
+  setTheme(next);
+  document.getElementById('theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+}
+
+/* ── Load on start ── */
+window.addEventListener('DOMContentLoaded', async () => {
+  /* Sync theme toggle button */
+  const saved = localStorage.getItem('dental-theme') || 'light';
+  setTheme(saved);
+  const tb = document.getElementById('theme-toggle');
+  if (tb) tb.textContent = saved === 'dark' ? '☀️' : '🌙';
+
+  try {
+    const res  = await fetch('/settings/data');
+    const data = await res.json();
+    if (!res.ok) return;
+
+    const p = data.profile;
+    document.getElementById('s-first-name').value = p.first_name || '';
+    document.getElementById('s-last-name').value  = p.last_name  || '';
+    document.getElementById('s-phone').value      = p.phone      || '';
+    document.getElementById('s-dob').value        = p.dob        || '';
+    if (p.gender) {
+      for (let opt of document.getElementById('s-gender').options) {
+        if (opt.value === p.gender) { opt.selected = true; break; }
+      }
+    }
+    if (!data.has_password) {
+      const wrap = document.getElementById('current-pw-wrap');
+      if (wrap) wrap.style.display = 'none';
+      document.getElementById('pw-subtitle').textContent =
+        'Set a password to enable email & password login alongside Google.';
+    }
+  } catch(e) { console.error('Settings load failed:', e); }
+
+  /* Load scan stats */
+  try {
+    const res  = await fetch('/settings/stats');
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('stat-total').textContent     = data.total ?? '0';
+      document.getElementById('stat-condition').textContent = data.most_common || 'None yet';
+      document.getElementById('stat-last').textContent      = data.last_scan   || 'Never';
+    }
+  } catch(e) {}
+});
+
+/* ── Save profile ── */
+async function saveProfile() {
+  const firstName = document.getElementById('s-first-name').value.trim();
+  if (!firstName) {
+    showToast('First name is required.', 'error');
+    return;
+  }
+  const btn = document.getElementById('save-profile-btn');
+  btn.disabled = true;
+  document.getElementById('sp-profile').style.display = 'block';
+  try {
+    const res = await fetch('/settings/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name: document.getElementById('s-first-name').value.trim(),
+        last_name:  document.getElementById('s-last-name').value.trim(),
+        phone:      document.getElementById('s-phone').value.trim(),
+        gender:     document.getElementById('s-gender').value,
+        dob:        document.getElementById('s-dob').value,
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Save failed.', 'error'); return; }
+    const fn = document.getElementById('s-first-name').value.trim();
+    const ln = document.getElementById('s-last-name').value.trim();
+    document.getElementById('avatar-name').textContent = [fn,ln].filter(Boolean).join(' ') || 'You';
+    const av = document.getElementById('avatar-display');
+    if (!av.querySelector('img')) av.textContent = ([fn[0],ln[0]].filter(Boolean).join('').toUpperCase()) || '?';
+    showToast(data.message || 'Profile saved!', 'success');
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.disabled = false; document.getElementById('sp-profile').style.display = 'none'; }
+}
+
+/* ── Change password ── */
+async function changePassword() {
+  const newPw  = document.getElementById('s-new-pw').value;
+  const confPw = document.getElementById('s-confirm-pw').value;
+  if (newPw.length < 8)  { showToast('Password must be at least 8 characters.', 'error'); return; }
+  if (newPw !== confPw)  { showToast('Passwords do not match.', 'error'); return; }
+  document.getElementById('sp-pw').style.display = 'block';
+  try {
+    const res = await fetch('/settings/password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        current_password: document.getElementById('s-current-pw')?.value || '',
+        new_password:     newPw,
+        confirm_password: confPw,
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast(data.message || 'Password updated!', 'success');
+      ['s-current-pw','s-new-pw','s-confirm-pw'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      document.getElementById('pw-fill').style.width = '0%';
+    } else { showToast(data.error || 'Update failed.', 'error'); }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { document.getElementById('sp-pw').style.display = 'none'; }
+}
+
+function checkPwStrength() {
+  const pw   = document.getElementById('s-new-pw').value;
+  const fill = document.getElementById('pw-fill');
+  let score  = 0;
+  if (pw.length >= 8)           score++;
+  if (/[A-Z]/.test(pw))        score++;
+  if (/[0-9]/.test(pw))        score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  fill.style.width      = ['0%','25%','50%','75%','100%'][score];
+  fill.style.background = ['#ccc','#a32d2d','#854f0b','#1a7a50','#1a5c40'][score];
+}
+
+function toggleDeleteConfirm() {
+  document.getElementById('delete-confirm').classList.toggle('show');
+  document.getElementById('delete-confirm-input').value = '';
+}
+
+async function deleteAccount() {
+  if (document.getElementById('delete-confirm-input').value.trim() !== 'DELETE') {
+    showToast('Type DELETE to confirm.', 'error'); return;
+  }
+  document.getElementById('sp-delete').style.display = 'block';
+  try {
+    const res  = await fetch('/settings/delete-account', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirm: 'DELETE' })
+    });
+    const data = await res.json();
+    if (res.ok) { showToast('Account deleted. Redirecting…', 'success'); setTimeout(() => window.location.href = '/', 1500); }
+    else { showToast(data.error || 'Delete failed.', 'error'); }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { document.getElementById('sp-delete').style.display = 'none'; }
+}
+
+function showToast(msg, type = '') {
+  const div = document.createElement('div');
+  div.className = 'toast-item ' + type;
+  div.textContent = msg;
+  document.getElementById('toast').appendChild(div);
+  setTimeout(() => div.remove(), 3500);
+}
+</script>
+</body>
+</html>

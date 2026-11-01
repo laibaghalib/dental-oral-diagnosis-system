@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register — DentalAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #0a1628;
+      --teal:   #0d9488;
+      --teal2:  #14b8a6;
+      --gold:   #f59e0b;
+      --cream:  #fdfbf7;
+      --white:  #ffffff;
+      --muted:  #64748b;
+      --border: #e2e8f0;
+      --radius: 16px;
+      --shadow: 0 8px 32px rgba(10,22,40,0.10);
+      --font-display: 'Playfair Display', serif;
+      --font-body:    'DM Sans', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--navy);
+      color: var(--navy);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── BACKGROUND ── */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 0;
+      background: linear-gradient(135deg, #0a1628 0%, #0d2137 50%, #0a1f2e 100%);
+    }
+    .bg-layer::before {
+      content: '🦷';
+      position: absolute; font-size: 28rem;
+      opacity: 0.04; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: toothpulse 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .bg-glow {
+      position: fixed; width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(13,148,136,0.12) 0%, transparent 70%);
+      top: -100px; right: -100px; z-index: 0; pointer-events: none;
+    }
+    .bg-glow2 {
+      position: fixed; width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+      bottom: -80px; left: -80px; z-index: 0; pointer-events: none;
+    }
+    @keyframes toothpulse {
+      0%,100% { transform: translate(-50%,-50%) scale(1); opacity:.04; }
+      50%      { transform: translate(-50%,-50%) scale(1.05); opacity:.07; }
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 3rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(10,22,40,0.6);
+      backdrop-filter: blur(14px);
+    }
+    .nav-brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
+    .nav-brand-text { font-family: var(--font-display); font-size: 1.2rem; font-weight: 800; color: white; line-height: 1.1; }
+    .nav-brand-text span { color: var(--teal2); }
+    .nav-sub { color: rgba(255,255,255,0.4); font-size: .58rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-right a { color: rgba(255,255,255,0.65); text-decoration: none; font-size: .88rem; font-weight: 500; transition: color .2s; }
+    .nav-right a:hover { color: white; }
+    .nav-right a + a { margin-left: 1.5rem; }
+    .nav-right .btn-login { padding: .45rem 1.2rem; border: 1.5px solid rgba(20,184,166,0.4); border-radius: 8px; color: var(--teal2) !important; transition: all .2s !important; }
+    .nav-right .btn-login:hover { background: rgba(20,184,166,0.1); border-color: var(--teal2); }
+
+    /* ── MAIN LAYOUT ── */
+    .page-wrap {
+      position: relative; z-index: 1;
+      flex: 1; display: flex;
+      align-items: center; justify-content: center;
+      padding: 3rem 1.5rem;
+    }
+
+    /* ── AUTH CARD ── */
+    .auth-card {
+      background: rgba(255,255,255,0.97);
+      border-radius: 24px;
+      padding: 2.8rem 2.5rem;
+      width: 100%; max-width: 460px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1);
+      animation: cardIn .5s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(30px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── HEADER ── */
+    .auth-header { text-align: center; margin-bottom: 2rem; }
+    .auth-icon {
+      width: 68px; height: 68px; border-radius: 20px;
+      background: linear-gradient(135deg, var(--teal), var(--teal2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; margin: 0 auto 1.2rem;
+      box-shadow: 0 8px 24px rgba(13,148,136,0.35);
+    }
+    .auth-header h1 { font-family: var(--font-display); font-size: 1.9rem; font-weight: 900; color: var(--navy); margin-bottom: .4rem; }
+    .auth-header p { color: var(--muted); font-size: .92rem; }
+
+    /* ── FLASH MESSAGES ── */
+    .alert { padding: .75rem 1rem; border-radius: 10px; font-size: .88rem; font-weight: 500; margin-bottom: 1.2rem; display: flex; align-items: center; gap: .5rem; }
+    .alert-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+    .alert-info    { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+
+    /* ── FORM ── */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group label { display: block; font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .45rem; }
+    .input-wrap { position: relative; }
+    .input-wrap i { position: absolute; left: .95rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .85rem; pointer-events: none; }
+    .form-group input, .form-group select {
+      width: 100%; padding: .75rem 1rem .75rem 2.5rem;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: .95rem; font-family: var(--font-body);
+      color: var(--navy); background: white;
+      outline: none; transition: border .2s, box-shadow .2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(13,148,136,0.12);
+    }
+    .form-group input::placeholder { color: #b0bec5; }
+    .pw-toggle { position: absolute; right: .95rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); font-size: .85rem; padding: 0; transition: color .2s; }
+    .pw-toggle:hover { color: var(--teal); }
+
+    /* password strength */
+    .pw-strength { margin-top: .5rem; }
+    .pw-strength-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+    .pw-strength-fill { height: 100%; border-radius: 2px; width: 0; transition: width .3s, background .3s; }
+    .pw-strength-label { font-size: .72rem; color: var(--muted); margin-top: .25rem; }
+
+    /* ── CHECKBOX ── */
+    .checkbox-group { display: flex; align-items: flex-start; gap: .6rem; margin-bottom: 1.2rem; }
+    .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--teal); flex-shrink: 0; }
+    .checkbox-group label { font-size: .83rem; color: var(--muted); line-height: 1.5; cursor: pointer; }
+    .checkbox-group label a { color: var(--teal); text-decoration: none; font-weight: 600; }
+    .checkbox-group label a:hover { text-decoration: underline; }
+
+    /* ── SUBMIT BTN ── */
+    .btn-submit {
+      width: 100%; padding: .85rem;
+      background: linear-gradient(135deg, var(--teal), var(--teal2));
+      color: white; border: none; border-radius: 10px;
+      font-size: 1rem; font-weight: 700; font-family: var(--font-body);
+      cursor: pointer; margin-top: .25rem;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      transition: transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 16px rgba(13,148,136,0.35);
+    }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(13,148,136,0.45); }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* ── DIVIDER ── */
+    .divider { display: flex; align-items: center; gap: .75rem; margin: 1.4rem 0; color: var(--muted); font-size: .8rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── GOOGLE BTN ── */
+    .btn-google {
+      width: 100%; padding: .8rem;
+      background: white; border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: .95rem; font-weight: 600;
+      font-family: var(--font-body); color: var(--navy);
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: .6rem;
+      text-decoration: none; transition: all .2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .btn-google:hover { border-color: #4285f4; background: #f8f9ff; box-shadow: 0 4px 16px rgba(66,133,244,0.15); transform: translateY(-1px); }
+
+    /* ── FOOTER ── */
+    .auth-footer { text-align: center; margin-top: 1.5rem; font-size: .88rem; color: var(--muted); }
+    .auth-footer a { color: var(--teal); font-weight: 600; text-decoration: none; }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    /* ── TRUST BADGES ── */
+    .trust-row { display: flex; justify-content: center; gap: 1.2rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .trust-item { display: flex; align-items: center; gap: .35rem; font-size: .72rem; color: var(--muted); font-weight: 500; }
+    .trust-item i { color: var(--teal); font-size: .8rem; }
+
+    @media (max-width: 480px) {
+      nav { padding: 1rem 1.2rem; }
+      .auth-card { padding: 2rem 1.5rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .trust-row { flex-direction: column; align-items: center; gap: .6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="bg-glow"></div>
+<div class="bg-glow2"></div>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="{{ url_for('index') }}" class="nav-brand">
+    <span style="font-size:1.7rem;">🦷</span>
+    <div>
+      <div class="nav-brand-text">Dental<span>AI</span></div>
+      <div class="nav-sub">Smart AI Dental Assistant</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <a href="{{ url_for('index') }}">Home</a>
+    <a href="{{ url_for('auth.login') }}" class="btn-login">Sign In</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="page-wrap">
+  <div class="auth-card">
+
+    <div class="auth-header">
+      <div class="auth-icon">🦷</div>
+      <h1>Create Account</h1>
+      <p>Join thousands of patients across Pakistan</p>
+    </div>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            <i class="fa-solid fa-circle-info"></i> {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Google first — lower friction -->
+    <a href="{{ url_for('auth.google_login') }}" class="btn-google">
+      <svg width="18" height="18" viewBox="0 0 48 48">
+        <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3L37 9.9C33.6 6.9 29 5 24 5 12.9 5 4 13.9 4 25s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/>
+        <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13 24 13c3.1 0 5.8 1.1 7.9 3L37 9.9C33.6 6.9 29 5 24 5 16.3 5 9.7 9.1 6.3 14.7z"/>
+        <path fill="#4CAF50" d="M24 45c4.9 0 9.3-1.8 12.7-4.7l-5.9-5c-2 1.4-4.4 2.2-6.8 2.2-5.2 0-9.6-3.5-11.2-8.2l-6.5 5C9.5 40.7 16.2 45 24 45z"/>
+        <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.3 4.1-4.2 5.4l5.9 5C36.8 39.1 44 34 44 25c0-1.3-.1-2.6-.4-3.9z"/>
+      </svg>
+      Sign up with Google
+    </a>
+
+    <div class="divider">or register with email</div>
+
+    <!-- Register form -->
+    <form method="POST" action="{{ url_for('auth.register') }}">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" name="first_name" placeholder="John" required autocomplete="given-name"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" name="last_name" placeholder="Doe" required autocomplete="family-name"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-envelope"></i>
+          <input type="email" name="email" placeholder="john@example.com" required autocomplete="email"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" name="password" id="pwField" placeholder="Min. 8 characters" required
+                 autocomplete="new-password" oninput="checkStrength(this.value)"/>
+          <button type="button" class="pw-toggle" onclick="togglePw()">
+            <i class="fa-solid fa-eye" id="pwIcon"></i>
+          </button>
+        </div>
+        <div class="pw-strength">
+          <div class="pw-strength-bar"><div class="pw-strength-fill" id="pwFill"></div></div>
+          <div class="pw-strength-label" id="pwLabel"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" name="confirm_password" id="pwConfirm" placeholder="Repeat password" required
+                 autocomplete="new-password" oninput="checkMatch()"/>
+          <button type="button" class="pw-toggle" onclick="togglePwConfirm()">
+            <i class="fa-solid fa-eye" id="pwIconConfirm"></i>
+          </button>
+        </div>
+        <div class="pw-strength-label" id="matchLabel"></div>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="terms" name="terms" required/>
+        <label for="terms">
+          I agree to the <a href="/terms">Terms of Use</a> and <a href="/privacy">Privacy Policy</a>
+        </label>
+      </div>
+
+      <button type="submit" class="btn-submit">
+        <i class="fa-solid fa-user-plus"></i> Create Account
+      </button>
+
+    </form>
+
+    <p class="auth-footer">
+      Already have an account? <a href="{{ url_for('auth.login') }}">Sign in here</a>
+    </p>
+
+    <div class="trust-row">
+      <span class="trust-item"><i class="fa-solid fa-lock"></i> Encrypted</span>
+      <span class="trust-item"><i class="fa-solid fa-shield-halved"></i> Secure</span>
+      <span class="trust-item"><i class="fa-solid fa-user-shield"></i> Private</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function togglePw() {
+    const f = document.getElementById('pwField');
+    const i = document.getElementById('pwIcon');
+    f.type = f.type === 'password' ? 'text' : 'password';
+    i.className = f.type === 'password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+  }
+  function togglePwConfirm() {
+    const f = document.getElementById('pwConfirm');
+    const i = document.getElementById('pwIconConfirm');
+    f.type = f.type === 'password' ? 'text' : 'password';
+    i.className = f.type === 'password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+  }
+
+  function checkStrength(pw) {
+    const fill  = document.getElementById('pwFill');
+    const label = document.getElementById('pwLabel');
+    if (!pw) { fill.style.width = '0'; label.textContent = ''; return; }
+    let score = 0;
+    if (pw.length >= 8)  score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    const levels = [
+      { w: '25%', bg: '#ef4444', t: 'Weak' },
+      { w: '50%', bg: '#f59e0b', t: 'Fair' },
+      { w: '75%', bg: '#3b82f6', t: 'Good' },
+      { w: '100%', bg: '#10b981', t: 'Strong' },
+    ];
+    const l = levels[score - 1] || levels[0];
+    fill.style.width      = l.w;
+    fill.style.background = l.bg;
+    label.textContent     = l.t;
+    label.style.color     = l.bg;
+  }
+
+  function checkMatch() {
+    const pw   = document.getElementById('pwField').value;
+    const conf = document.getElementById('pwConfirm').value;
+    const lbl  = document.getElementById('matchLabel');
+    if (!conf) { lbl.textContent = ''; return; }
+    if (pw === conf) {
+      lbl.textContent = '✓ Passwords match';
+      lbl.style.color = '#10b981';
+    } else {
+      lbl.textContent = '✗ Passwords do not match';
+      lbl.style.color = '#ef4444';
+    }
+  }
+</script>
+
+</body>
+</html>

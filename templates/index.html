@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dental and Oral Diagnosis System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+<body>
+
+<nav style="
+  position:fixed; top:0; left:0; width:100%; z-index:1000;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.9rem 3rem;
+  background:rgba(10,22,40,0.92);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  transition:all .3s ease;
+" id="mainNav">
+
+  <!-- HAMBURGER — always visible, opens side drawer -->
+  <button id="menuToggle" onclick="toggleDrawer()" style="
+    background:rgba(255,255,255,0.08);border:1.5px solid rgba(20,184,166,0.3);
+    color:white;width:38px;height:38px;border-radius:10px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  "><i class="fa-solid fa-bars"></i></button>
+
+  <!-- BRAND (centred) -->
+  <a href="/" style="display:flex;align-items:center;gap:.6rem;text-decoration:none;position:absolute;left:50%;transform:translateX(-50%);">
+    <span style="font-size:1.8rem;">🦷</span>
+    <div>
+      <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;color:white;line-height:1.1;">
+        Dental &amp; Oral<span style="color:#14b8a6;"> Diagnosis System</span>
+      </div>
+      <div style="color:rgba(255,255,255,0.45);font-size:.6rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;">
+        Smart AI Dental Assistant
+      </div>
+    </div>
+  </a>
+
+  <!-- RIGHT: auth + CTA -->
+  <div style="display:flex;align-items:center;gap:1rem;">
+    {% if current_user.is_authenticated %}
+    <div style="position:relative;">
+      <button onclick="toggleProfile()" style="
+        background:rgba(255,255,255,0.08);border:1px solid rgba(20,184,166,0.3);
+        color:white;padding:.45rem 1rem;border-radius:8px;
+        font-size:.85rem;font-weight:500;cursor:pointer;
+        display:flex;align-items:center;gap:.5rem;font-family:var(--font-body);
+      ">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:white;">
+          {{ current_user.initials }}
+        </div>
+        {{ current_user.first_name }}
+        <i class="fa-solid fa-chevron-down" style="font-size:.7rem;opacity:.6;"></i>
+      </button>
+      <div id="profileDropdown" style="
+        display:none;position:absolute;top:48px;right:0;
+        background:white;border-radius:12px;min-width:200px;
+        box-shadow:0 8px 32px rgba(10,22,40,0.18);
+        border:1px solid #e2e8f0;overflow:hidden;z-index:1001;
+      ">
+        <div style="padding:1rem;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+          <div style="font-weight:600;color:#0a1628;font-size:.9rem;">{{ current_user.full_name }}</div>
+          <div style="color:#64748b;font-size:.75rem;">{{ current_user.email }}</div>
+        </div>
+        <a href="/settings" style="display:flex;align-items:center;gap:.6rem;padding:.75rem 1rem;color:#0a1628;text-decoration:none;font-size:.88rem;font-weight:500;"
+           onmouseover="this.style.background='#f0fdf9'" onmouseout="this.style.background=''">
+          <i class="fa-solid fa-user-circle" style="color:#0d9488;"></i> My Account
+        </a>
+        <button onclick="logoutUser()" style="width:100%;display:flex;align-items:center;gap:.6rem;padding:.75rem 1rem;color:#991b1b;background:none;border:none;font-size:.88rem;font-weight:500;cursor:pointer;text-align:left;"
+                onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background=''">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </div>
+    {% else %}
+    <a href="/auth/login" style="color:rgba(255,255,255,0.7);text-decoration:none;font-size:.88rem;font-weight:500;"
+       onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">Sign In</a>
+    <a href="/auth/google" style="
+      display:flex;align-items:center;gap:.4rem;
+      background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+      color:white;padding:.45rem 1rem;border-radius:8px;
+      font-size:.85rem;font-weight:500;text-decoration:none;
+    " onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+      <i class="fa-brands fa-google"></i> Google
+    </a>
+    {% endif %}
+
+    <a href="/analyze" style="
+      display:inline-flex;align-items:center;gap:.5rem;
+      background:linear-gradient(135deg,#0d9488,#14b8a6);
+      color:white;text-decoration:none;
+      padding:.55rem 1.4rem;border-radius:8px;
+      font-size:.9rem;font-weight:700;
+      box-shadow:0 4px 16px rgba(13,148,136,0.4);
+      transition:all .2s;
+    " onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 24px rgba(13,148,136,0.5)'"
+       onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 16px rgba(13,148,136,0.4)'">
+      <i class="fa-solid fa-tooth"></i> Scan My Teeth
+    </a>
+  </div>
+</nav>
+
+<!-- SIDE DRAWER — includes all nav links -->
+<div id="sideDrawer" style="
+  position:fixed;top:0;left:0;bottom:0;width:270px;
+  background:#1e293b;transform:translateX(-270px);
+  transition:transform .3s ease;z-index:998;
+  display:flex;flex-direction:column;
+  box-shadow:4px 0 32px rgba(0,0,0,0.4);
+">
+  <!-- Drawer header -->
+  <div style="padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:1.6rem;">🦷</span>
+      <div>
+        <div style="font-family:var(--font-display);font-size:.95rem;font-weight:800;color:white;line-height:1.2;">Dental &amp; Oral<span style="color:#14b8a6;"> Diagnosis</span></div>
+        <div style="color:rgba(255,255,255,0.4);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;">Smart AI Dental Assistant</div>
+      </div>
+    </div>
+    <button onclick="toggleDrawer()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Nav links -->
+  <nav style="flex:1;padding-top:6px;overflow-y:auto;">
+
+    <!-- Main nav links (moved from top navbar) -->
+    <div style="padding:10px 20px 4px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,0.3);">Navigation</div>
+
+    <a href="/" onclick="toggleDrawer()" style="display:flex;align-items:center;gap:14px;padding:13px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:.9rem;font-weight:500;border-left:3px solid transparent;"
+       onmouseover="this.style.color='white';this.style.borderLeftColor='#14b8a6';this.style.background='rgba(20,184,166,0.1)'"
+       onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.borderLeftColor='transparent';this.style.background=''">
+      <span style="font-size:1.1rem;">🏠</span> Home
+    </a>
+
+    <a href="/about" onclick="toggleDrawer()" style="display:flex;align-items:center;gap:14px;padding:13px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:.9rem;font-weight:500;border-left:3px solid transparent;"
+       onmouseover="this.style.color='white';this.style.borderLeftColor='#14b8a6';this.style.background='rgba(20,184,166,0.1)'"
+       onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.borderLeftColor='transparent';this.style.background=''">
+      <span style="font-size:1.1rem;">ℹ️</span> About
+    </a>
+
+    <a href="#services" onclick="toggleDrawer()" style="display:flex;align-items:center;gap:14px;padding:13px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:.9rem;font-weight:500;border-left:3px solid transparent;"
+       onmouseover="this.style.color='white';this.style.borderLeftColor='#14b8a6';this.style.background='rgba(20,184,166,0.1)'"
+       onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.borderLeftColor='transparent';this.style.background=''">
+      <span style="font-size:1.1rem;">🦷</span> Services
+    </a>
+
+    <a href="#testimonials" onclick="toggleDrawer()" style="display:flex;align-items:center;gap:14px;padding:13px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:.9rem;font-weight:500;border-left:3px solid transparent;"
+       onmouseover="this.style.color='white';this.style.borderLeftColor='#14b8a6';this.style.background='rgba(20,184,166,0.1)'"
+       onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.borderLeftColor='transparent';this.style.background=''">
+      <span style="font-size:1.1rem;">⭐</span> Patient Reviews
+    </a>
+
+    <!-- Divider -->
+    <div style="height:1px;background:rgba(255,255,255,0.08);margin:8px 20px;"></div>
+    <div style="padding:10px 20px 4px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,0.3);">Account</div>
+
+    {% if current_user.is_authenticated %}
+    <a href="/settings" onclick="toggleDrawer()" style="display:flex;align-items:center;gap:14px;padding:13px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:.9rem;font-weight:500;border-left:3px solid transparent;"
+       onmouseover="this.style.color='white';this.style.borderLeftColor='#14b8a6';this.style.background='rgba(20,184,166,0.1)'"
+       onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.borderLeftColor='transparent';this.style.background=''">
+      <span style="font-size:1.1rem;">👤</span> My Account
+    </a>
+    {% endif %}
+
+    <a href="/analyze" onclick="toggleDrawer()" style="display:flex;align-items:center;gap:14px;padding:13px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:.9rem;font-weight:500;border-left:3px solid transparent;"
+       onmouseover="this.style.color='white';this.style.borderLeftColor='#14b8a6';this.style.background='rgba(20,184,166,0.1)'"
+       onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.borderLeftColor='transparent';this.style.background=''">
+      <span style="font-size:1.1rem;">🔬</span> Analysis
+    </a>
+
+  </nav>
+
+  <!-- Drawer footer -->
+  <div style="padding:14px 20px;border-top:1px solid rgba(255,255,255,0.08);">
+    {% if current_user.is_authenticated %}
+    <button onclick="logoutUser()" style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);padding:10px;border-radius:8px;cursor:pointer;font-size:.88rem;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:8px;">
+      <span>🚪</span> Logout
+    </button>
+    {% else %}
+    <a href="/auth/google" style="display:flex;align-items:center;justify-content:center;gap:8px;color:#14b8a6;text-decoration:none;font-size:.9rem;font-weight:600;">
+      <i class="fa-brands fa-google"></i> Login with Google
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div id="navOverlay" onclick="toggleDrawer()" style="display:none;position:fixed;inset:0;z-index:997;background:rgba(0,0,0,0.4);"></div>
+
+<div id="pageContent" style="transition:margin-left .3s ease;">
+
+  <section class="hero" style="position:relative;overflow:hidden;min-height:100vh;display:flex;align-items:center;justify-content:center;">
+    <video autoplay muted loop playsinline
+      style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;filter:brightness(0.6);">
+      <source src="{{ url_for('static', filename='dental.mp4') }}" type="video/mp4"/>
+    </video>
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(10,22,40,0.15) 0%,rgba(10,22,40,0.50) 100%);z-index:1;"></div>
+    <div style="position:relative;z-index:2;padding:2rem 2.5rem 6rem;max-width:700px;margin:80px auto 0;text-align:center;">
+      <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> AI-Powered Dental Platform</div>
+      <h1>Your Smile, <em>Understood</em> by AI</h1>
+      <p>Upload dental photos, check symptoms and manage oral health — all in one professional platform.</p>
+      <div class="hero-btns">
+        <a href="/analyze" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Analyze Image</a>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:#f8fafc;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;padding:1.4rem 2rem;">
+    <div style="max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1rem 3rem;">
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <span style="font-size:1.6rem;">🦷</span>
+        <div>
+          <div style="color:#0f172a;font-weight:800;font-size:1.25rem;line-height:1;">10,000+</div>
+          <div style="color:#64748b;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;">Patients Served</div>
+        </div>
+      </div>
+      <div style="width:1px;height:36px;background:#e2e8f0;"></div>
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <span style="font-size:1.6rem;">⚡</span>
+        <div>
+          <div style="color:#0f172a;font-weight:800;font-size:1.25rem;line-height:1;">95%</div>
+          <div style="color:#64748b;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;">AI Accuracy</div>
+        </div>
+      </div>
+      <div style="width:1px;height:36px;background:#e2e8f0;"></div>
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <span style="font-size:1.6rem;">🤖</span>
+        <div>
+          <div style="color:#0f172a;font-weight:800;font-size:1.25rem;line-height:1;">3 Models</div>
+          <div style="color:#64748b;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;">ResNet · DenseNet · EfficientNet</div>
+        </div>
+      </div>
+      <div style="width:1px;height:36px;background:#e2e8f0;"></div>
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <span style="font-size:1.6rem;">🇵🇰</span>
+        <div>
+          <div style="color:#0f172a;font-weight:800;font-size:1.25rem;line-height:1;">#1</div>
+          <div style="color:#64748b;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;">Dental AI in Pakistan</div>
+        </div>
+      </div>
+      <div style="width:1px;height:36px;background:#e2e8f0;"></div>
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <span style="font-size:1.6rem;">🆓</span>
+        <div>
+          <div style="color:#0d9488;font-weight:800;font-size:1.25rem;line-height:1;">Free</div>
+          <div style="color:#64748b;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;">Oral Assessment</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slider-section">
+    <div class="homeSlider swiper">
+      <div class="swiper-wrapper">
+
+        <div class="swiper-slide">
+          <div class="slide-intro-bg"></div>
+          <div class="slide-content">
+            <span class="slide-tag">🦷 Welcome to Dental &amp; Oral Diagnosis System</span>
+            <h2>Know Your <span>Dental Health</span><br>Before It's Too Late</h2>
+            <p>AI-powered diagnosis for caries, gingivitis, calculus &amp; more — detect early, smile longer</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="https://images.unsplash.com/photo-1629909615184-74f495363b67?w=1400&q=80" alt="Dental Care"/>
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            <span class="slide-tag">AI Diagnostics</span>
+            <h2>Advanced AI Dental Diagnostics</h2>
+            <p>Detect dental conditions early with 95% accuracy</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="https://images.unsplash.com/photo-1551884170-09fb70a3a2ed?w=1400&q=80" alt="AI Analysis"/>
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            <span class="slide-tag">Image Analysis</span>
+            <h2>Instant Image Analysis</h2>
+            <p>Upload your dental photo and get results in seconds</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=1400&q=80" alt="Dental Checkup"/>
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            <span class="slide-tag">Early Detection</span>
+            <h2>Early Detection Saves Smiles</h2>
+            <p>No one can take your smile when decay is kept miles away</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="https://images.unsplash.com/photo-1571772996211-2f02c9727629?w=1400&q=80" alt="Dentist"/>
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            <span class="slide-tag">Professional Care</span>
+            <h2>Professional Dental Care</h2>
+            <p>AI-powered platform trusted by patients across Pakistan</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=1400&q=80" alt="Smile"/>
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            <span class="slide-tag">Your Smile</span>
+            <h2>Your Smile, Our Priority</h2>
+            <p>Dentistry is not expensive — neglect is</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <div class="slide-quote-bg"></div>
+          <div class="slide-content">
+            <div class="quote-tooth">"It's a beautiful day to save smiles"</div>
+            <p class="quote-author">— Dental &amp; Oral Diagnosis System</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <div class="slide-disease-bg bg-caries"></div>
+          <div class="slide-content">
+            <div class="disease-icon">🦠</div>
+            <span class="slide-tag">Dental Caries</span>
+            <h2>Dental Caries — <span>Tooth Decay</span></h2>
+            <p>The most common dental disease worldwide. AI detects caries at the earliest stage before it spreads deeper.</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <div class="slide-disease-bg bg-calculus"></div>
+          <div class="slide-content">
+            <div class="disease-icon">🪨</div>
+            <span class="slide-tag">Calculus</span>
+            <h2>Calculus — <span>Tartar Buildup</span></h2>
+            <p>Hardened plaque that damages gums. Our AI identifies calculus deposits for timely professional cleaning.</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <div class="slide-disease-bg bg-gingivitis"></div>
+          <div class="slide-content">
+            <div class="disease-icon">🔴</div>
+            <span class="slide-tag">Gingivitis</span>
+            <h2>Gingivitis — <span>Gum Inflammation</span></h2>
+            <p>Red, swollen and bleeding gums. Catch it early with AI-powered gum analysis.</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <div class="slide-disease-bg bg-ulcers"></div>
+          <div class="slide-content">
+            <div class="disease-icon">⚠️</div>
+            <span class="slide-tag">Oral Ulcers</span>
+            <h2>Oral Ulcers — <span>Painful Sores</span></h2>
+            <p>Our AI helps identify ulcer type and severity to recommend the right treatment plan.</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <div class="slide-disease-bg bg-discolor"></div>
+          <div class="slide-content">
+            <div class="disease-icon">🌗</div>
+            <span class="slide-tag">Tooth Discoloration</span>
+            <h2>Tooth <span>Discoloration</span></h2>
+            <p>AI identifies the type of discoloration for targeted whitening or care.</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <div class="slide-disease-bg bg-hypodontia"></div>
+          <div class="slide-content">
+            <div class="disease-icon">🦷</div>
+            <span class="slide-tag">Hypodontia</span>
+            <h2>Hypodontia — <span>Missing Teeth</span></h2>
+            <p>AI assists in early diagnosis and helps plan implants, bridges or orthodontic treatment.</p>
+          </div>
+        </div>
+
+      </div>
+      <div class="swiper-pagination"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+    </div>
+  </section>
+
+  <section id="services" style="background:linear-gradient(135deg,#f0f9ff 0%,#e8f4f1 100%);padding:4rem 2rem;">
+    <div style="text-align:center;margin-bottom:2.2rem;">
+      <h2 style="font-size:2.2rem;font-weight:900;color:#0a1628;margin-bottom:.5rem;">Our Services</h2>
+      <p style="color:#4a627a;font-size:1rem;">Click any card to get started</p>
+    </div>
+    <div class="six-cards-grid" style="display:grid;grid-template-columns:1fr;gap:2rem;">
+
+      <div class="six-card" onclick="window.location.href='/about'" style="min-height:480px;display:flex;flex-direction:column;overflow:hidden;border-radius:28px;border:1px solid rgba(13,148,136,0.16);box-shadow:0 24px 60px rgba(15,23,42,0.08);background:white;cursor:pointer;transition:transform .25s;">
+        <div class="six-card-img-wrap" style="position:relative;overflow:hidden;height:260px;">
+          <img class="six-card-img" src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&q=80" alt="Services" style="width:100%;height:100%;object-fit:cover;"/>
+          <div class="six-card-img-overlay" style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,0.05) 0%,rgba(15,23,42,0.30) 100%);"></div>
+          <div class="six-card-icon" style="position:absolute;left:1.5rem;bottom:-22px;width:80px;height:80px;border-radius:24px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0d9488,#06b6d4);box-shadow:0 24px 50px rgba(13,148,136,0.24);">
+            <i class="fa-solid fa-tooth" style="color:white;font-size:1.85rem;"></i>
+          </div>
+        </div>
+        <div class="six-card-body" style="padding:2.5rem 2rem 2rem;display:flex;flex-direction:column;justify-content:space-between;gap:1.4rem;">
+          <div>
+            <div style="font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#0d9488;margin-bottom:.75rem;">24/7 Available</div>
+            <h3 style="font-size:1.75rem;font-weight:900;color:#0a1628;margin-bottom:1rem;">24/7 Dental Services</h3>
+            <p style="color:#4a627a;font-size:1rem;line-height:1.9;">AI-powered detection of caries, calculus, gingivitis, ulcers, discoloration and hypodontia — anytime, anywhere, from the comfort of your home.</p>
+          </div>
+          <span class="six-card-btn" style="display:inline-flex;align-items:center;justify-content:center;padding:.95rem 1.5rem;border-radius:999px;background:linear-gradient(135deg,#0d9488,#06b6d4);color:white;font-weight:700;font-size:1rem;box-shadow:0 16px 32px rgba(13,148,136,0.22);">Explore Services →</span>
+        </div>
+      </div>
+
+      <div class="six-card" onclick="window.location.href='/analyze'" style="min-height:480px;display:flex;flex-direction:column;overflow:hidden;border-radius:28px;border:1px solid rgba(13,148,136,0.16);box-shadow:0 24px 60px rgba(15,23,42,0.08);background:white;cursor:pointer;transition:transform .25s;">
+        <div class="six-card-img-wrap" style="position:relative;overflow:hidden;height:260px;">
+          <img class="six-card-img" src="https://images.unsplash.com/photo-1504439468489-c8920d796a29?w=800&q=80" alt="AI Analysis" style="width:100%;height:100%;object-fit:cover;"/>
+          <div class="six-card-img-overlay" style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,0.05) 0%,rgba(15,23,42,0.30) 100%);"></div>
+          <div class="six-card-icon" style="position:absolute;left:1.5rem;bottom:-22px;width:80px;height:80px;border-radius:24px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2563eb,#0d9488);box-shadow:0 24px 50px rgba(37,99,235,0.24);">
+            <i class="fa-solid fa-magnifying-glass" style="color:white;font-size:1.85rem;"></i>
+          </div>
+        </div>
+        <div class="six-card-body" style="padding:2.5rem 2rem 2rem;display:flex;flex-direction:column;justify-content:space-between;gap:1.4rem;">
+          <div>
+            <div style="font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#0d9488;margin-bottom:.75rem;">3 AI Models</div>
+            <h3 style="font-size:1.75rem;font-weight:900;color:#0a1628;margin-bottom:1rem;">AI Dental Analysis</h3>
+            <p style="color:#4a627a;font-size:1rem;line-height:1.9;">Upload a clear photo and get an instant AI-powered diagnosis with detailed findings, GradCAM heatmaps and a downloadable PDF report in seconds.</p>
+          </div>
+          <span class="six-card-btn" style="display:inline-flex;align-items:center;justify-content:center;padding:.95rem 1.5rem;border-radius:999px;background:linear-gradient(135deg,#2563eb,#0d9488);color:white;font-weight:700;font-size:1rem;box-shadow:0 16px 32px rgba(37,99,235,0.22);">Scan My Teeth →</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section style="background:linear-gradient(135deg,#e0f7fa 0%,#b2ebf2 50%,#e0f2fe 100%);padding:5rem 2rem;">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:3.5rem;">
+        <span style="display:inline-block;background:rgba(255,255,255,0.7);color:#0369a1;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.4rem 1.2rem;border-radius:999px;border:1px solid rgba(3,105,161,0.2);margin-bottom:1rem;">How It Works</span>
+        <h2 style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;color:#0c4a6e;margin-bottom:.75rem;line-height:1.2;">Get Your Dental Report<br>in 3 Simple Steps</h2>
+        <p style="color:#0369a1;font-size:1rem;max-width:520px;margin:0 auto;line-height:1.7;">No clinic visit needed. Upload your image, let AI do the work, and get instant results.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem;">
+        {% for step in [
+          {'num':'1','emoji':'📤','title':'Upload Your Image','desc':'Take a clear photo of your teeth using your mobile camera. Supports JPG and PNG formats.','grad':'linear-gradient(135deg,#0284c7,#38bdf8)'},
+          {'num':'2','emoji':'🤖','title':'AI Analyzes Instantly','desc':'Our 3-model AI ensemble — ResNet, DenseNet & EfficientNetV2 — scans your image and detects dental conditions in seconds.','grad':'linear-gradient(135deg,#0ea5e9,#67e8f9)'},
+          {'num':'3','emoji':'📋','title':'Get Your Full Report','desc':'Receive a detailed dental report with diagnosis, severity level and recommended treatment — sent to your email instantly.','grad':'linear-gradient(135deg,#38bdf8,#7dd3fc)'}
+        ] %}
+        <div style="background:rgba(255,255,255,0.75);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.9);border-radius:24px;padding:2.5rem 2rem;text-align:center;position:relative;box-shadow:0 8px 32px rgba(3,105,161,0.10);transition:transform .3s,box-shadow .3s;"
+             onmouseover="this.style.transform='translateY(-6px)';this.style.boxShadow='0 20px 50px rgba(3,105,161,0.18)'"
+             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 32px rgba(3,105,161,0.10)'">
+          <div style="width:75px;height:75px;border-radius:50%;background:{{ step.grad }};display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 24px rgba(2,132,199,0.35);font-size:2rem;">{{ step.emoji }}</div>
+          <div style="position:absolute;top:1.2rem;right:1.5rem;width:32px;height:32px;border-radius:50%;background:{{ step.grad }};color:white;font-size:.8rem;font-weight:800;display:flex;align-items:center;justify-content:center;">{{ step.num }}</div>
+          <h3 style="color:#0c4a6e;font-size:1.2rem;font-weight:800;margin-bottom:.75rem;">{{ step.title }}</h3>
+          <p style="color:#0369a1;font-size:.9rem;line-height:1.7;">{{ step.desc }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="text-align:center;margin-top:3rem;">
+        <a href="/analyze" style="display:inline-flex;align-items:center;gap:.6rem;background:linear-gradient(135deg,#0284c7,#38bdf8);color:white;text-decoration:none;padding:.9rem 2.5rem;border-radius:999px;font-weight:700;font-size:1rem;box-shadow:0 8px 24px rgba(2,132,199,0.35);">
+          🦷 Try AI Analysis Free
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="testimonials" class="testimonials-section">
+    <div class="testimonials-inner">
+      <div style="text-align:center;margin-bottom:3.5rem;">
+        <span style="display:inline-block;background:rgba(13,148,136,0.15);color:#0d9488;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.4rem 1.2rem;border-radius:999px;border:1px solid rgba(13,148,136,0.3);margin-bottom:1rem;">Patient Reviews</span>
+        <h2 style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;color:white;margin-bottom:.75rem;line-height:1.2;">What Our Patients Are Saying</h2>
+        <p style="color:rgba(255,255,255,0.5);font-size:1rem;max-width:520px;margin:0 auto;line-height:1.7;">Real feedback from real patients — and your chance to share yours.</p>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-cards">
+          {% for review in [
+            {'init':'A','name':'Ayesha Malik','city':'Lahore','color':'linear-gradient(135deg,#0d9488,#06b6d4)','stars':'★★★★★','text':'I uploaded a photo of my teeth and within seconds the system detected early caries I had no idea about. My dentist confirmed it. This tool literally saved my tooth!'},
+            {'init':'U','name':'Usman Tariq','city':'Karachi','color':'linear-gradient(135deg,#6366f1,#8b5cf6)','stars':'★★★★★','text':'As a student I cannot afford regular dental visits. The Dental & Oral Diagnosis System gave me a free detailed report and even emailed it to me as a PDF. Absolutely amazing service!'},
+            {'init':'S','name':'Sara Ahmed','city':'Islamabad','color':'linear-gradient(135deg,#06b6d4,#0d9488)','stars':'★★★★★','text':'The symptom checker helped me understand my gum pain before I even visited a doctor. It told me it was gingivitis and recommended exactly what my dentist later confirmed.'},
+            {'init':'H','name':'Hassan Raza','city':'Narowal','color':'linear-gradient(135deg,#0d9488,#06b6d4)','stars':'★★★★☆','text':'Very impressed with the AI analysis. It detected calculus buildup I had ignored for months. The report was professional and easy to understand. Highly recommended!'}
+          ] %}
+          <div class="testimonial-card">
+            <div style="font-size:3rem;line-height:1;color:rgba(13,148,136,0.3);font-family:Georgia,serif;margin-bottom:.5rem;">"</div>
+            <div style="color:#f59e0b;font-size:1rem;margin-bottom:1rem;">{{ review.stars }}</div>
+            <p style="color:rgba(255,255,255,0.8);font-size:.92rem;line-height:1.8;margin-bottom:1.5rem;">{{ review.text }}</p>
+            <div style="display:flex;align-items:center;gap:.8rem;">
+              <div style="width:44px;height:44px;border-radius:50%;background:{{ review.color }};display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;color:white;flex-shrink:0;">{{ review.init }}</div>
+              <div>
+                <div style="color:white;font-weight:700;font-size:.92rem;">{{ review.name }}</div>
+                <div style="color:rgba(255,255,255,0.4);font-size:.78rem;">{{ review.city }}, Pakistan</div>
+              </div>
+              <div style="margin-left:auto;background:rgba(13,148,136,0.15);color:#0d9488;font-size:.7rem;font-weight:700;padding:.25rem .7rem;border-radius:999px;border:1px solid rgba(13,148,136,0.3);">Verified</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="feedback-panel">
+          <div class="feedback-card">
+            <div style="text-align:center;margin-bottom:2rem;">
+              <span style="display:inline-block;background:rgba(13,148,136,0.15);color:#14b8a6;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.4rem 1.2rem;border-radius:999px;border:1px solid rgba(13,148,136,0.3);margin-bottom:1rem;">Share Your Experience</span>
+              <h3>How Was Your Experience?</h3>
+              <p>Your feedback helps us improve and helps others make informed decisions.</p>
+            </div>
+
+            <div style="text-align:center;margin-bottom:2rem;">
+              <div style="font-size:.85rem;color:rgba(255,255,255,0.5);margin-bottom:.75rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;">Your Rating</div>
+              <div id="star-rating" style="display:flex;justify-content:center;gap:.5rem;">
+                <span data-star="1" onclick="setRating(1)" onmouseover="hoverRating(1)" onmouseout="resetHover()" style="font-size:2.2rem;cursor:pointer;transition:transform .15s;color:#94a3b8;" class="star-btn">☆</span>
+                <span data-star="2" onclick="setRating(2)" onmouseover="hoverRating(2)" onmouseout="resetHover()" style="font-size:2.2rem;cursor:pointer;transition:transform .15s;color:#94a3b8;" class="star-btn">☆</span>
+                <span data-star="3" onclick="setRating(3)" onmouseover="hoverRating(3)" onmouseout="resetHover()" style="font-size:2.2rem;cursor:pointer;transition:transform .15s;color:#94a3b8;" class="star-btn">☆</span>
+                <span data-star="4" onclick="setRating(4)" onmouseover="hoverRating(4)" onmouseout="resetHover()" style="font-size:2.2rem;cursor:pointer;transition:transform .15s;color:#94a3b8;" class="star-btn">☆</span>
+                <span data-star="5" onclick="setRating(5)" onmouseover="hoverRating(5)" onmouseout="resetHover()" style="font-size:2.2rem;cursor:pointer;transition:transform .15s;color:#94a3b8;" class="star-btn">☆</span>
+              </div>
+              <div id="rating-label" style="font-size:.82rem;color:rgba(255,255,255,0.4);margin-top:.5rem;height:1.2em;"></div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+              <div>
+                <label style="display:block;font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;">Full Name *</label>
+                <input type="text" id="fb-name" placeholder="Your name"
+                  style="width:100%;padding:.7rem 1rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:white;font-size:.9rem;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;"
+                  onfocus="this.style.borderColor='#14b8a6'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'"/>
+              </div>
+              <div>
+                <label style="display:block;font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;">Email *</label>
+                <input type="email" id="fb-email" placeholder="your@email.com"
+                  style="width:100%;padding:.7rem 1rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:white;font-size:.9rem;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;"
+                  onfocus="this.style.borderColor='#14b8a6'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'"/>
+              </div>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;">City</label>
+              <input type="text" id="fb-city" placeholder="e.g. Lahore, Karachi, Islamabad"
+                style="width:100%;padding:.7rem 1rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:white;font-size:.9rem;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;"
+                onfocus="this.style.borderColor='#14b8a6'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'"/>
+            </div>
+
+            <div style="margin-bottom:1.75rem;">
+              <label style="display:block;font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;">Your Feedback *</label>
+              <textarea id="fb-message" placeholder="Tell us about your experience..." rows="4"
+                style="width:100%;padding:.7rem 1rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:white;font-size:.9rem;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;transition:border .2s;line-height:1.6;"
+                onfocus="this.style.borderColor='#14b8a6'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'"></textarea>
+            </div>
+
+            <button onclick="submitFeedback()" id="fb-submit-btn"
+              style="width:100%;padding:.9rem;background:linear-gradient(135deg,#0d9488,#14b8a6);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:transform .15s,box-shadow .2s;box-shadow:0 4px 20px rgba(13,148,136,0.35);"
+              onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(13,148,136,0.5)'"
+              onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 20px rgba(13,148,136,0.35)'">
+              <span id="fb-btn-text">⭐ Submit Feedback</span>
+              <span id="fb-spinner" style="display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .6s linear infinite;"></span>
+            </button>
+
+            <div id="fb-success" style="display:none;text-align:center;padding:1.5rem;background:rgba(13,148,136,0.15);border:1px solid rgba(13,148,136,0.3);border-radius:12px;margin-top:1rem;">
+              <div style="font-size:2rem;margin-bottom:.5rem;">🎉</div>
+              <div style="color:#14b8a6;font-weight:700;font-size:1rem;margin-bottom:.25rem;">Thank you for your feedback!</div>
+              <div style="color:rgba(255,255,255,0.5);font-size:.85rem;">Your experience helps us improve for everyone.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:#f8fafc;padding:5rem 2rem;">
+    <div style="max-width:780px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:3.5rem;">
+        <span style="display:inline-block;background:linear-gradient(135deg,rgba(13,148,136,0.1),rgba(6,182,212,0.1));color:#0d9488;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.4rem 1.2rem;border-radius:999px;border:1px solid rgba(13,148,136,0.2);margin-bottom:1rem;">FAQ</span>
+        <h2 style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;color:#0f172a;margin-bottom:.75rem;line-height:1.2;">Frequently Asked<br>Questions</h2>
+      </div>
+      {% for faq in [
+        {'q':'🦷 Is the system really free to use?','a':'Yes! Your first oral health assessment is completely free. Upload a dental image and receive a full AI-powered report at no cost. No credit card required, no hidden fees.'},
+        {'q':'🤖 How accurate is the AI diagnosis?','a':'Our AI uses a 3-model ensemble — ResNet, DenseNet and EfficientNetV2 — achieving up to 95% diagnostic accuracy. It is trained on thousands of real dental images.'},
+        {'q':'📸 What kind of image should I upload?','a':'You can upload a clear photo of your teeth taken with your phone camera. Supported formats include JPG and PNG. Ensure the image is well-lit and in focus.'},
+        {'q':'🔒 Is my data private and secure?','a':'Absolutely. Your dental images and personal data are never shared or sold to third parties. All data is encrypted and stored securely.'},
+        {'q':'📧 How do I get my dental report?','a':'After the AI analyzes your image, you can view the full report on screen instantly. You can also download it as a PDF or have it sent directly to your email.'},
+        {'q':'🏥 Does this replace a real dentist?','a':'No — this is a screening and awareness tool, not a replacement for professional dental care. It helps you detect potential issues early so you can make informed decisions.'}
+      ] %}
+      <div style="background:white;border:1px solid #e2e8f0;border-radius:16px;margin-bottom:.75rem;overflow:hidden;transition:box-shadow .2s;"
+           onmouseover="this.style.boxShadow='0 4px 20px rgba(13,148,136,0.08)'" onmouseout="this.style.boxShadow='none'">
+        <button onclick="toggleFaq(this)" style="width:100%;padding:1.25rem 1.5rem;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left;font-family:inherit;">
+          <span style="font-size:.95rem;font-weight:700;color:#0f172a;">{{ faq.q }}</span>
+          <span class="faq-icon" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#06b6d4);color:white;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;transition:transform .3s;">
+            <i class="fa-solid fa-plus"></i>
+          </span>
+        </button>
+        <div class="faq-answer">
+          <p style="color:#64748b;font-size:.9rem;line-height:1.8;border-top:1px solid #f1f5f9;padding-top:1rem;margin:0;">{{ faq.a }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section style="background:linear-gradient(135deg,#f0f9ff 0%,#e8f4f1 100%);padding:5rem 2rem;position:relative;overflow:hidden;">
+    <div style="max-width:750px;margin:0 auto;text-align:center;position:relative;z-index:1;">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(13,148,136,0.12);border:1px solid rgba(13,148,136,0.3);color:#0d9488;padding:6px 18px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:1.5rem;">
+        <i class="fa-solid fa-tooth"></i> Limited Free Spots Available
+      </div>
+      <h2 style="font-size:clamp(2rem,5vw,3.2rem);font-weight:900;color:#0a1628;line-height:1.15;margin-bottom:1rem;">
+        Ready to Protect<br>
+        <span style="background:linear-gradient(135deg,#0d9488,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Your Smile Today?</span>
+      </h2>
+      <p style="color:#4a627a;font-size:1.05rem;line-height:1.8;max-width:520px;margin:0 auto 2.5rem;">
+        Join thousands of patients across Pakistan who use our system to detect dental conditions early — for free, from home, in seconds.
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;">
+        <a href="/analyze" style="display:inline-flex;align-items:center;gap:.6rem;background:linear-gradient(135deg,#0d9488,#06b6d4);color:white;text-decoration:none;padding:1rem 2.5rem;border-radius:999px;font-weight:700;font-size:1rem;box-shadow:0 8px 32px rgba(13,148,136,0.3);">
+          🦷 Start Free Assessment
+        </a>
+        <a href="/analyze" style="display:inline-flex;align-items:center;gap:.6rem;background:white;color:#0a1628;text-decoration:none;padding:1rem 2.5rem;border-radius:999px;font-weight:700;font-size:1rem;border:1.5px solid #e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+          🤖 Try AI Analysis
+        </a>
+      </div>
+      <p style="color:#94a3b8;font-size:.78rem;margin-top:1.5rem;">
+        <i class="fa-solid fa-lock"></i> No credit card required &nbsp;·&nbsp;
+        <i class="fa-solid fa-shield-halved"></i> Private &amp; secure &nbsp;·&nbsp;
+        <i class="fa-solid fa-bolt"></i> Results in seconds
+      </p>
+    </div>
+  </section>
+
+  <!-- FOOTER — updated contact info -->
+  <footer class="footer-wrap">
+    <div class="footer-main">
+      <div>
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
+          <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#0d9488);display:flex;align-items:center;justify-content:center;font-size:1.35rem;">🦷</div>
+          <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;color:#e2e8f0;line-height:1.2;">Dental &amp; Oral<br><span style="background:linear-gradient(90deg,#06b6d4,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Diagnosis System</span></div>
+        </div>
+        <p style="font-size:.84rem;line-height:1.8;color:#64748b;margin-bottom:1.25rem;max-width:240px;">Smart AI-powered dental assistant helping patients detect and understand dental conditions early.</p>
+        <a href="https://www.google.com/maps/search/?api=1&query=University+of+Narowal+Punjab+Pakistan" target="_blank" class="col-link" style="display:flex;align-items:center;gap:.5rem;color:#64748b;font-size:.78rem;margin-bottom:1.1rem;text-decoration:none;">
+          <i class="fa-solid fa-location-dot" style="color:#0d9488;"></i>
+          <span>University of Narowal, Punjab, Pakistan</span>
+        </a>
+        <div style="display:flex;gap:.65rem;margin-top:1.1rem;">
+          <a href="https://instagram.com/itxaniai" target="_blank" class="social-btn"><i class="fa-brands fa-instagram"></i></a>
+          <a href="https://x.com/Itx_laibach" target="_blank" class="social-btn"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="#" class="social-btn"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" class="social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+        </div>
+      </div>
+      <div>
+        <span class="col-title">Quick Links</span>
+        <a href="/" class="col-link">Home</a>
+        <a href="/about" class="col-link">About</a>
+        <a href="/analyze" class="col-link">AI Analysis</a>
+        <a href="#services" class="col-link">Services</a>
+        <a href="#testimonials" class="col-link">Patient Reviews</a>
+      </div>
+      <div>
+        <span class="col-title">Services</span>
+        <a href="/analyze" class="col-link">Cavity Detection</a>
+        <a href="/analyze" class="col-link">Gum Disease Check</a>
+        <a href="/analyze" class="col-link">Mouth Sore Detection</a>
+      </div>
+      <div>
+        <span class="col-title">Account</span>
+        <a href="/settings" class="col-link">My Account</a>
+        <a href="/history" class="col-link">Scan History</a>
+        <a href="/settings" class="col-link">Settings</a>
+      </div>
+      <div>
+        <span class="col-title">Contact</span>
+        <a href="mailto:laibasparkles@gmail.com" class="col-link"><i class="fa-solid fa-envelope" style="color:#0d9488;"></i> laibasparkles@gmail.com</a>
+        <a href="tel:+923223698138" class="col-link"><i class="fa-solid fa-phone" style="color:#0d9488;"></i> +92 322 369 8138</a>
+        <span class="col-link" style="cursor:default;"><i class="fa-solid fa-clock" style="color:#0d9488;"></i> Mon–Thu, 9AM–5PM</span>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <span>© 2026 Dental &amp; Oral Diagnosis System. All rights reserved.</span>
+      <div class="bar-right">
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Use</a>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+<script>
+let selectedRating = 0;
+const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+
+function setRating(n) {
+  selectedRating = n;
+  updateStars(n);
+  document.getElementById('rating-label').textContent = ratingLabels[n];
+  document.getElementById('rating-label').style.color = '#14b8a6';
+}
+function hoverRating(n) {
+  updateStars(n);
+  document.getElementById('rating-label').textContent = ratingLabels[n];
+}
+function resetHover() {
+  updateStars(selectedRating);
+  document.getElementById('rating-label').textContent = selectedRating ? ratingLabels[selectedRating] : '';
+}
+function updateStars(n) {
+  document.querySelectorAll('.star-btn').forEach((star, i) => {
+    if (i < n) {
+      star.textContent = '★';
+      star.style.color = '#f59e0b';
+      star.style.transform = 'scale(1.15)';
+    } else {
+      star.textContent = '☆';
+      star.style.color = '#94a3b8';
+      star.style.transform = 'scale(1)';
+    }
+  });
+}
+
+async function submitFeedback() {
+  const name    = document.getElementById('fb-name').value.trim();
+  const email   = document.getElementById('fb-email').value.trim();
+  const city    = document.getElementById('fb-city').value.trim();
+  const message = document.getElementById('fb-message').value.trim();
+
+  if (!name)           { showToast('Please enter your name.'); return; }
+  if (!email)          { showToast('Please enter your email.'); return; }
+  if (!selectedRating) { showToast('Please select a star rating.'); return; }
+  if (!message)        { showToast('Please write your feedback.'); return; }
+
+  const btn = document.getElementById('fb-submit-btn');
+  btn.disabled = true;
+  document.getElementById('fb-btn-text').style.display = 'none';
+  document.getElementById('fb-spinner').style.display  = 'block';
+
+  try {
+    const res  = await fetch('/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, city, message, rating: selectedRating })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('fb-success').style.display = 'block';
+      btn.style.display = 'none';
+      document.getElementById('fb-name').value    = '';
+      document.getElementById('fb-email').value   = '';
+      document.getElementById('fb-city').value    = '';
+      document.getElementById('fb-message').value = '';
+      selectedRating = 0;
+      updateStars(0);
+    } else {
+      showToast(data.error || 'Submission failed. Please try again.');
+      btn.disabled = false;
+      document.getElementById('fb-btn-text').style.display = 'block';
+      document.getElementById('fb-spinner').style.display  = 'none';
+    }
+  } catch(e) {
+    showToast('Network error. Please try again.');
+    btn.disabled = false;
+    document.getElementById('fb-btn-text').style.display = 'block';
+    document.getElementById('fb-spinner').style.display  = 'none';
+  }
+}
+</script>
+
+</body>
+</html>

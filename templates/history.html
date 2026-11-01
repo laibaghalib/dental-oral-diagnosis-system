@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scan History — DentAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #f7f5f0;
+      --surface:   #ffffff;
+      --border:    rgba(0,0,0,0.09);
+      --border-md: rgba(0,0,0,0.15);
+      --text:      #1a1814;
+      --muted:     #6b6760;
+      --accent:    #1a5c40;
+      --accent-lt: #e8f5ee;
+      --danger:    #a32d2d;
+      --danger-lt: #fcebeb;
+      --radius:    12px;
+      --radius-sm: 8px;
+    }
+    [data-theme="dark"] {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --border:    rgba(255,255,255,0.08);
+      --border-md: rgba(255,255,255,0.14);
+      --text:      #e8e6e1;
+      --muted:     #8b8680;
+      --accent:    #2d9e6b;
+      --accent-lt: #0d2a1c;
+      --danger:    #c0392b;
+      --danger-lt: #2a0d0d;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+    nav { background: var(--surface); border-bottom: 0.5px solid var(--border-md); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; transition: background 0.3s; }
+    .nav-logo { font-family: 'DM Serif Display', serif; font-size: 1.3rem; color: var(--accent); }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { font-size: 0.875rem; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--accent); font-weight: 500; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 { font-family: 'DM Serif Display', serif; font-size: 2rem; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+    .page-header p { font-size: 0.875rem; color: var(--muted); }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 1rem 1.25rem; transition: background 0.3s; }
+    .stat-card .label { font-size: 0.75rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; }
+    .stat-card .value { font-size: 1.5rem; font-weight: 500; color: var(--text); }
+
+    .empty { text-align: center; padding: 5rem 2rem; color: var(--muted); }
+    .empty svg { width: 48px; height: 48px; opacity: 0.25; margin-bottom: 1rem; }
+    .empty h3 { font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text); }
+    .empty a { color: var(--accent); text-decoration: none; font-weight: 500; }
+
+    .scans { display: flex; flex-direction: column; gap: 1rem; }
+    .scan-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.15s, background 0.3s; }
+    .scan-card:hover { border-color: var(--border-md); }
+
+    .scan-top { display: grid; grid-template-columns: 80px 80px 1fr auto; gap: 1rem; align-items: center; padding: 1rem 1.25rem; }
+    @media (max-width: 600px) { .scan-top { grid-template-columns: 64px 1fr auto; } .gradcam-thumb { display: none; } }
+
+    .scan-thumb, .gradcam-thumb { width: 80px; height: 80px; border-radius: var(--radius-sm); object-fit: cover; background: var(--bg); border: 0.5px solid var(--border); }
+    .no-thumb { width: 80px; height: 80px; border-radius: var(--radius-sm); background: var(--bg); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.7rem; }
+
+    .scan-info { display: flex; flex-direction: column; gap: 0.35rem; }
+    .scan-condition { font-size: 1.05rem; font-weight: 500; color: var(--text); }
+    .scan-confidence { display: inline-block; font-size: 0.75rem; font-weight: 500; padding: 0.2rem 0.6rem; border-radius: 100px; background: var(--accent-lt); color: var(--accent); }
+    .scan-date { font-size: 0.78rem; color: var(--muted); margin-top: 0.1rem; }
+    .scan-models { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.25rem; }
+    .model-tag { font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 100px; border: 0.5px solid var(--border-md); color: var(--muted); }
+
+    .scan-actions { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end; }
+    .btn-expand { font-size: 0.8rem; padding: 0.4rem 0.9rem; border-radius: var(--radius-sm); border: 0.5px solid var(--border-md); background: transparent; color: var(--text); cursor: pointer; transition: background 0.15s; }
+    .btn-expand:hover { background: var(--bg); }
+    .btn-delete { font-size: 0.78rem; padding: 0.4rem 0.9rem; border-radius: var(--radius-sm); border: 0.5px solid rgba(163,45,45,0.25); background: transparent; color: var(--danger); cursor: pointer; transition: background 0.15s; }
+    .btn-delete:hover { background: var(--danger-lt); }
+
+    .scan-detail { display: none; border-top: 0.5px solid var(--border); padding: 1rem 1.25rem; background: var(--bg); transition: background 0.3s; }
+    .scan-detail.open { display: block; }
+
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
+
+    .detail-section h4 { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.75rem; }
+
+    .prob-row { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.5rem; }
+    .prob-meta { display: flex; justify-content: space-between; font-size: 0.78rem; }
+    .prob-name { color: var(--text); font-weight: 500; }
+    .prob-pct  { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .prob-track { height: 4px; background: var(--border); border-radius: 100px; overflow: hidden; }
+    .prob-fill  { height: 100%; border-radius: 100px; background: var(--accent); }
+    .prob-fill.dim { background: var(--border-md); }
+
+    .gradcam-full { width: 100%; border-radius: var(--radius-sm); margin-top: 0.5rem; }
+    .flash { padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.875rem; background: var(--accent-lt); color: var(--accent); border: 0.5px solid rgba(26,92,64,0.2); }
+  </style>
+</head>
+<body>
+
+<script>
+  /* Apply theme before paint */
+  (function() {
+    const t = localStorage.getItem('dental-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+
+<nav>
+  <span class="nav-logo">DentAI</span>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/analyze">Analyze</a>
+    <a href="/history" class="active">History</a>
+    <a href="/settings">Settings</a>
+    <button onclick="toggleTheme()" id="theme-toggle" title="Toggle theme"
+      style="background:none;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:0.35rem 0.6rem;cursor:pointer;font-size:1rem;color:var(--muted);transition:all 0.15s;line-height:1;">🌙</button>
+    <a href="/auth/logout">Sign out</a>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>Scan History</h1>
+    <p>All dental scans linked to your account, newest first.</p>
+  </div>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="stats">
+    <div class="stat-card"><div class="label">Total Scans</div><div class="value">{{ total }}</div></div>
+    <div class="stat-card"><div class="label">Most Common</div><div class="value" style="font-size:1rem;padding-top:0.2rem;">{{ most_common or '—' }}</div></div>
+  </div>
+
+  {% if scans %}
+  <div class="scans">
+    {% for scan in scans %}
+    <div class="scan-card">
+      <div class="scan-top">
+        {% if scan.image_b64 %}
+          <img class="scan-thumb" src="data:image/png;base64,{{ scan.image_b64 }}" alt="Scan image" />
+        {% else %}
+          <div class="no-thumb">No image</div>
+        {% endif %}
+        {% if scan.gradcam_b64 %}
+          <img class="gradcam-thumb" src="data:image/png;base64,{{ scan.gradcam_b64 }}" alt="GradCAM" />
+        {% else %}
+          <div class="no-thumb gradcam-thumb">No CAM</div>
+        {% endif %}
+        <div class="scan-info">
+          <div class="scan-condition">{{ scan.predicted_class }}</div>
+          <span class="scan-confidence">{{ scan.confidence }}% confidence</span>
+          <div class="scan-date">{{ scan.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+          <div class="scan-models">
+            {% for model_name, prediction in scan.models.items() %}
+              <span class="model-tag">{{ model_name }}: {{ prediction }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="scan-actions">
+          <button class="btn-expand" onclick="toggleDetail({{ scan.id }}, this)">Details</button>
+          <form method="POST" action="/history/delete/{{ scan.id }}" onsubmit="return confirm('Delete this scan?')">
+            <button type="submit" class="btn-delete">Delete</button>
+          </form>
+        </div>
+      </div>
+      <div class="scan-detail" id="detail-{{ scan.id }}">
+        <div class="detail-grid">
+          <div class="detail-section">
+            <h4>Class Probabilities</h4>
+            {% set probs_sorted = scan.probs.items() | sort(attribute='1', reverse=True) %}
+            {% for cls, pct in probs_sorted %}
+            <div class="prob-row">
+              <div class="prob-meta"><span class="prob-name">{{ cls }}</span><span class="prob-pct">{{ pct }}%</span></div>
+              <div class="prob-track"><div class="prob-fill {% if cls != scan.predicted_class %}dim{% endif %}" style="width: {{ pct }}%"></div></div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="detail-section">
+            <h4>GradCAM Heatmap</h4>
+            {% if scan.gradcam_b64 %}
+              <img class="gradcam-full" src="data:image/png;base64,{{ scan.gradcam_b64 }}" alt="GradCAM heatmap" />
+              <p style="font-size:0.75rem;color:var(--muted);margin-top:0.5rem;">Red/yellow = regions the models focused on.</p>
+            {% else %}
+              <p style="font-size:0.85rem;color:var(--muted);">GradCAM not available for this scan.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+      <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
+    </svg>
+    <h3>No scans yet</h3>
+    <p>Go to <a href="/analyze">Analyze</a> and upload your first dental image.</p>
+  </div>
+  {% endif %}
+</main>
+
+<script>
+  function toggleDetail(id, btn) {
+    const el = document.getElementById('detail-' + id);
+    const open = el.classList.toggle('open');
+    btn.textContent = open ? 'Hide' : 'Details';
+  }
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next    = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('dental-theme', next);
+    document.getElementById('theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+  }
+  window.addEventListener('DOMContentLoaded', () => {
+    const t = localStorage.getItem('dental-theme') || 'light';
+    document.getElementById('theme-toggle').textContent = t === 'dark' ? '☀️' : '🌙';
+  });
+</script>
+</body>
+</html>

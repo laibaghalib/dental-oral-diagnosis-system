@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About — DentalAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:  #0a1628;
+      --teal:  #0d9488;
+      --teal2: #14b8a6;
+      --gold:  #f59e0b;
+      --white: #ffffff;
+      --muted: #64748b;
+      --font-display: 'Playfair Display', serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+    body { font-family: var(--font-body); background: var(--navy); color: var(--white); overflow-x: hidden; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .9rem 3rem;
+      background: rgba(10,22,40,0.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .nav-brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
+    .nav-brand-text { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; color: white; line-height: 1.1; }
+    .nav-brand-text span { color: #14b8a6; }
+    .nav-sub { color: rgba(255,255,255,0.45); font-size: .6rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; }
+    .nav-links a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: .9rem; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover, .nav-links a.active { color: #14b8a6; }
+    .btn-scan {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: linear-gradient(135deg,#0d9488,#14b8a6);
+      color: white; text-decoration: none;
+      padding: .55rem 1.4rem; border-radius: 8px;
+      font-size: .9rem; font-weight: 700;
+      box-shadow: 0 4px 16px rgba(13,148,136,0.4);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 60vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 8rem 2rem 5rem;
+      background: linear-gradient(135deg, #0a1628 0%, #0d2137 60%, #0a1f2e 100%);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 60% 40%, rgba(13,148,136,0.12) 0%, transparent 60%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(13,148,136,0.15); border: 1px solid rgba(20,184,166,0.3);
+      color: #14b8a6; font-size: .75rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      padding: .4rem 1.2rem; border-radius: 999px; margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-family: var(--font-display); font-size: clamp(2.5rem,6vw,4rem);
+      font-weight: 900; line-height: 1.1; margin-bottom: 1.25rem;
+      color: white;
+    }
+    .hero h1 em { color: #14b8a6; font-style: italic; }
+    .hero p { color: rgba(255,255,255,0.6); font-size: 1.1rem; max-width: 560px; margin: 0 auto; line-height: 1.8; }
+
+    /* ── SECTIONS ── */
+    section { padding: 5rem 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      display: inline-block; background: rgba(13,148,136,0.15);
+      color: #14b8a6; font-size: .72rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      padding: .35rem 1rem; border-radius: 999px;
+      border: 1px solid rgba(13,148,136,0.3); margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: var(--font-display); font-size: clamp(1.8rem,3.5vw,2.6rem);
+      font-weight: 900; line-height: 1.2; margin-bottom: .75rem;
+    }
+    .section-sub { color: rgba(255,255,255,0.5); font-size: 1rem; line-height: 1.7; max-width: 560px; }
+
+    /* ── STORY ── */
+    .story-section { background: #f8fafc; }
+    .story-section .section-title { color: #0a1628; }
+    .story-section .section-sub { color: #64748b; }
+    .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    @media (max-width: 768px) { .story-grid { grid-template-columns: 1fr; gap: 2rem; } }
+    .story-text p { color: #4a627a; font-size: .95rem; line-height: 1.9; margin-bottom: 1rem; }
+    .story-text p:last-child { margin-bottom: 0; }
+    .story-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .stat-box {
+      background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+      padding: 1.5rem; text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      transition: transform .3s, box-shadow .3s;
+    }
+    .stat-box:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(13,148,136,0.12); }
+    .stat-num { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: #0d9488; line-height: 1; }
+    .stat-label { color: #64748b; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; margin-top: .35rem; }
+
+    /* ── TECHNOLOGY ── */
+    .tech-section { background: linear-gradient(135deg, #0a1628 0%, #0d2137 100%); }
+    .tech-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-top: 3rem; }
+    @media (max-width: 768px) { .tech-grid { grid-template-columns: 1fr; } }
+    .tech-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 2rem; text-align: center;
+      transition: transform .3s, box-shadow .3s, border-color .3s;
+    }
+    .tech-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 48px rgba(13,148,136,0.15);
+      border-color: rgba(20,184,166,0.3);
+    }
+    .tech-icon {
+      width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 1.25rem;
+      display: flex; align-items: center; justify-content: center; font-size: 1.75rem;
+    }
+    .tech-card h3 { font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: .5rem; }
+    .tech-card .tech-sub { color: #14b8a6; font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-bottom: .75rem; }
+    .tech-card p { color: rgba(255,255,255,0.55); font-size: .875rem; line-height: 1.7; }
+
+    /* ── CONDITIONS ── */
+    .conditions-section { background: #f0f9ff; }
+    .conditions-section .section-title { color: #0a1628; }
+    .conditions-section .section-sub { color: #64748b; }
+    .conditions-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-top: 2.5rem; }
+    @media (max-width: 768px) { .conditions-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 480px) { .conditions-grid { grid-template-columns: 1fr; } }
+    .condition-card {
+      background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+      padding: 1.5rem; transition: transform .3s, box-shadow .3s;
+    }
+    .condition-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(13,148,136,0.1); }
+    .condition-emoji { font-size: 2rem; margin-bottom: .75rem; }
+    .condition-card h3 { font-size: .95rem; font-weight: 700; color: #0a1628; margin-bottom: .4rem; }
+    .condition-card p { font-size: .82rem; color: #64748b; line-height: 1.6; }
+
+    /* ── TEAM ── */
+    .team-section { background: linear-gradient(135deg, #0a1628 0%, #0d2137 100%); }
+    .team-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-top: 3rem; }
+    @media (max-width: 768px) { .team-grid { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; } }
+    .team-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 2rem 1.5rem; text-align: center;
+      transition: transform .3s, border-color .3s;
+    }
+    .team-card:hover { transform: translateY(-4px); border-color: rgba(20,184,166,0.25); }
+    .team-avatar {
+      width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 1.25rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 700; color: white;
+    }
+    .team-card h3 { font-size: .95rem; font-weight: 600; color: white; margin-bottom: .35rem; }
+    .team-card .team-role { font-size: .78rem; color: #14b8a6; font-weight: 500; margin-bottom: .6rem; }
+    .team-card p { font-size: .8rem; color: rgba(255,255,255,0.45); line-height: 1.6; }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e8f4f1 100%);
+      text-align: center;
+    }
+    .cta-section .section-title { color: #0a1628; }
+    .cta-btns { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 2rem; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: .6rem;
+      background: linear-gradient(135deg,#0d9488,#14b8a6);
+      color: white; text-decoration: none;
+      padding: 1rem 2.5rem; border-radius: 999px;
+      font-weight: 700; font-size: 1rem;
+      box-shadow: 0 8px 32px rgba(13,148,136,0.3);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(13,148,136,0.4); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: .6rem;
+      background: white; color: #0a1628; text-decoration: none;
+      padding: 1rem 2.5rem; border-radius: 999px;
+      font-weight: 700; font-size: 1rem;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transition: transform .2s;
+    }
+    .btn-secondary:hover { transform: translateY(-2px); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #060e1a; padding: 2rem 3rem;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    footer span { color: rgba(255,255,255,0.35); font-size: .82rem; }
+    footer a { color: rgba(255,255,255,0.35); text-decoration: none; font-size: .82rem; transition: color .2s; }
+    footer a:hover { color: #14b8a6; }
+
+    /* ── ANIMATIONS ── */
+    .fade-in { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="{{ url_for('index') }}" class="nav-brand">
+    <span style="font-size:1.8rem;">🦷</span>
+    <div>
+      <div class="nav-brand-text">Dental<span>AI</span></div>
+      <div class="nav-sub">Smart AI Dental Assistant</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="{{ url_for('index') }}">Home</a>
+    <a href="{{  url_for('about_page')}}" class="active">About</a>
+    <a href="{{ url_for('analyze_page') }}">Analyze</a>
+    <a href="{{ url_for('history') }}">History</a>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('settings_page') }}">Settings</a>
+      <a href="{{ url_for('auth.logout') }}">Sign Out</a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}">Sign In</a>
+    {% endif %}
+    <a href="{{ url_for('analyze_page') }}" class="btn-scan">
+      <i class="fa-solid fa-tooth"></i> Scan My Teeth
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div style="position:relative;z-index:1;">
+    <div class="hero-badge fade-in"><i class="fa-solid fa-shield-halved"></i> AI-Powered Dental Platform</div>
+    <h1 class="fade-in" style="transition-delay:.1s;">About <em>DentalAI</em></h1>
+    <p class="fade-in" style="transition-delay:.2s;">
+      Built in Pakistan, for Pakistan — making professional dental screening accessible to everyone, everywhere, for free.
+    </p>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="story-section">
+  <div class="container">
+    <div class="story-grid">
+      <div class="story-text fade-in">
+        <div class="section-tag">Our Story</div>
+        <h2 class="section-title" style="color:#0a1628;">Why We Built This</h2>
+        <p>Dental disease is one of the most widespread health problems in Pakistan, yet millions go undiagnosed simply because dental visits are expensive, inconvenient, or unavailable in rural areas.</p>
+        <p>DentalAI was built to change that. Using a 3-model AI ensemble trained on thousands of real dental images, we give anyone with a smartphone the ability to screen for 6 common dental conditions — instantly, for free.</p>
+        <p>Our goal is simple: catch dental problems early, before they become painful and expensive.</p>
+      </div>
+      <div class="story-stats fade-in" style="transition-delay:.15s;">
+        <div class="stat-box">
+          <div class="stat-num">95%</div>
+          <div class="stat-label">AI Accuracy</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">3</div>
+          <div class="stat-label">AI Models</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">6</div>
+          <div class="stat-label">Conditions Detected</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">Free</div>
+          <div class="stat-label">Always</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECHNOLOGY -->
+<section class="tech-section">
+  <div class="container">
+    <div style="text-align:center;" class="fade-in">
+      <div class="section-tag">The Technology</div>
+      <h2 class="section-title">Three Models. One Diagnosis.</h2>
+      <p class="section-sub" style="margin:0 auto;">
+        DentalAI combines three state-of-the-art deep learning models into an ensemble — each specialising in different visual patterns, together achieving higher accuracy than any single model alone.
+      </p>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card fade-in" style="transition-delay:.1s;">
+        <div class="tech-icon" style="background:linear-gradient(135deg,#0d9488,#06b6d4);">🧠</div>
+        <div class="tech-sub">Model 1</div>
+        <h3>ResNet18</h3>
+        <p>A residual network that excels at learning deep visual features. Strong at detecting structural dental abnormalities like cavities and hypodontia.</p>
+      </div>
+      <div class="tech-card fade-in" style="transition-delay:.2s;">
+        <div class="tech-icon" style="background:linear-gradient(135deg,#2563eb,#0d9488);">⚡</div>
+        <div class="tech-sub">Model 2</div>
+        <h3>DenseNet121</h3>
+        <p>Dense connections between layers enable rich feature reuse. Particularly effective at detecting subtle texture changes like early calculus and discoloration.</p>
+      </div>
+      <div class="tech-card fade-in" style="transition-delay:.3s;">
+        <div class="tech-icon" style="background:linear-gradient(135deg,#6366f1,#0d9488);">🔬</div>
+        <div class="tech-sub">Model 3</div>
+        <h3>EfficientNetV2</h3>
+        <p>The most efficient and accurate of the three. Scales depth, width and resolution together for superior performance on complex dental conditions like gingivitis and ulcers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONDITIONS -->
+<section class="conditions-section">
+  <div class="container">
+    <div style="text-align:center;" class="fade-in">
+      <div class="section-tag" style="color:#0d9488;background:rgba(13,148,136,0.1);border-color:rgba(13,148,136,0.2);">What We Detect</div>
+      <h2 class="section-title">6 Dental Conditions</h2>
+      <p class="section-sub" style="margin:0 auto;color:#64748b;">Our AI is trained to detect these conditions from a single dental photo.</p>
+    </div>
+    <div class="conditions-grid">
+      <div class="condition-card fade-in" style="transition-delay:.05s;">
+        <div class="condition-emoji">🦠</div>
+        <h3>Dental Caries</h3>
+        <p>The most common dental disease worldwide. AI detects early-stage cavities before they spread deeper into the tooth.</p>
+      </div>
+      <div class="condition-card fade-in" style="transition-delay:.1s;">
+        <div class="condition-emoji">🪨</div>
+        <h3>Calculus</h3>
+        <p>Hardened plaque (tartar) that damages gums over time. Early detection allows professional cleaning before damage sets in.</p>
+      </div>
+      <div class="condition-card fade-in" style="transition-delay:.15s;">
+        <div class="condition-emoji">🔴</div>
+        <h3>Gingivitis</h3>
+        <p>Inflamed, red and bleeding gums — the earliest stage of gum disease. Fully reversible when caught early.</p>
+      </div>
+      <div class="condition-card fade-in" style="transition-delay:.2s;">
+        <div class="condition-emoji">⚠️</div>
+        <h3>Oral Ulcers</h3>
+        <p>Painful sores on the inner mouth. AI identifies ulcer type and severity to recommend the right treatment plan.</p>
+      </div>
+      <div class="condition-card fade-in" style="transition-delay:.25s;">
+        <div class="condition-emoji">🌗</div>
+        <h3>Tooth Discoloration</h3>
+        <p>AI identifies whether discoloration is surface staining or deeper structural — guiding appropriate treatment.</p>
+      </div>
+      <div class="condition-card fade-in" style="transition-delay:.3s;">
+        <div class="condition-emoji">🦷</div>
+        <h3>Hypodontia</h3>
+        <p>Congenitally missing teeth. Early diagnosis helps plan implants, bridges or orthodontic treatment effectively.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section class="team-section">
+  <div class="container">
+    <div style="text-align:center;" class="fade-in">
+      <div class="section-tag">The Team</div>
+      <h2 class="section-title">Built by</h2>
+      <p class="section-sub" style="margin:0 auto;">A small team with a big mission — making dental care accessible across Pakistan.</p>
+    </div>
+    <div class="team-grid">
+      <div class="team-card fade-in" style="transition-delay:.1s;">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#0d9488,#06b6d4);">LG</div>
+        <h3>Laiba Ghalib</h3>
+        <div class="team-role">Frontend & Backend</div>
+        <p>Designed and built the full platform — from the user interface to the server and database architecture.</p>
+      </div>
+      <div class="team-card fade-in" style="transition-delay:.2s;">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#6366f1,#0d9488);">MZ</div>
+        <h3>Malaika Zubair</h3>
+        <div class="team-role">Machine Learning & Documentation</div>
+        <p>Worked on building and training the AI models, and handled all technical documentation and research methodology for the project.</p>
+      </div>
+      <div class="team-card fade-in" style="transition-delay:.3s;">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#2563eb,#0d9488);">HJ</div>
+        <h3>Husnain Javed</h3>
+        <div class="team-role">Machine Learning</div>
+        <p>Worked on building and training the AI models that power DentalAI's dental condition detection system.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container fade-in">
+    <div class="section-tag" style="color:#0d9488;background:rgba(13,148,136,0.1);border-color:rgba(13,148,136,0.2);">Try It Free</div>
+    <h2 class="section-title" style="color:#0a1628;">
+      Ready to Check<br>
+      <span style="background:linear-gradient(135deg,#0d9488,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Your Dental Health?</span>
+    </h2>
+    <p style="color:#4a627a;font-size:1rem;margin-top:.5rem;">Upload a photo and get your AI dental report in seconds — no clinic visit needed.</p>
+    <div class="cta-btns">
+      <a href="{{ url_for('analyze_page') }}" class="btn-primary">🦷 Start Free Assessment</a>
+      <a href="{{ url_for('index') }}" class="btn-secondary">← Back to Home</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2026 DentalAI. All rights reserved.</span>
+  <div style="display:flex;gap:1.5rem;">
+    <a href="{{ url_for('index') }}">Home</a>
+    <a href="{{ url_for('about_page') }}">About</a>
+    <a href="{{ url_for('analyze_page') }}">Analyze</a>
+  </div>
+</footer>
+
+<script>
+  // Fade-in on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

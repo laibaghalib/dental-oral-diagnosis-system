@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dental Analysis — DentAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #f7f5f0;
+      --surface:   #ffffff;
+      --border:    rgba(0,0,0,0.09);
+      --border-md: rgba(0,0,0,0.15);
+      --text:      #1a1814;
+      --muted:     #6b6760;
+      --accent:    #1a5c40;
+      --accent-lt: #e8f5ee;
+      --danger:    #a32d2d;
+      --danger-lt: #fcebeb;
+      --amber:     #854f0b;
+      --amber-lt:  #faeeda;
+      --radius:    12px;
+      --radius-sm: 8px;
+    }
+    [data-theme="dark"] {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --border:    rgba(255,255,255,0.08);
+      --border-md: rgba(255,255,255,0.14);
+      --text:      #e8e6e1;
+      --muted:     #8b8680;
+      --accent:    #2d9e6b;
+      --accent-lt: #0d2a1c;
+      --danger:    #c0392b;
+      --danger-lt: #2a0d0d;
+      --amber:     #b07d2a;
+      --amber-lt:  #2a1a00;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+    nav { background: var(--surface); border-bottom: 0.5px solid var(--border-md); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; transition: background 0.3s; }
+    .nav-logo { font-family: 'DM Serif Display', serif; font-size: 1.3rem; color: var(--accent); letter-spacing: -0.01em; }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { font-size: 0.875rem; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--accent); font-weight: 500; }
+
+    #upload-page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+    .upload-wrapper { width: 100%; max-width: 500px; }
+    .upload-wrapper h1 { font-family: 'DM Serif Display', serif; font-size: 2rem; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 0.3rem; text-align: center; }
+    .upload-wrapper .subtitle { font-size: 0.9rem; color: var(--muted); text-align: center; margin-bottom: 1.75rem; }
+    .upload-card { background: var(--surface); border-radius: var(--radius); border: 0.5px solid var(--border); overflow: hidden; transition: background 0.3s; }
+    .card-head { padding: 1rem 1.25rem; border-bottom: 0.5px solid var(--border); font-size: 0.8125rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .card-body { padding: 1.25rem; }
+
+    #drop-zone { border: 1.5px dashed var(--border-md); border-radius: var(--radius-sm); padding: 2.5rem 1.5rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; }
+    #drop-zone.dragging { border-color: var(--accent); background: var(--accent-lt); }
+    #drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-icon { width: 48px; height: 48px; background: var(--accent-lt); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .upload-icon svg { width: 22px; height: 22px; stroke: var(--accent); fill: none; }
+    #drop-zone h3 { font-size: 0.975rem; font-weight: 500; }
+    #drop-zone p { font-size: 0.8rem; color: var(--muted); }
+    #preview-img { max-width: 100%; max-height: 200px; border-radius: var(--radius-sm); display: none; object-fit: contain; }
+    #preview-img.visible { display: block; }
+
+    .btn-primary { margin-top: 1rem; width: 100%; padding: 0.75rem; border: none; border-radius: var(--radius-sm); background: var(--accent); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
+    .btn-primary.loading .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #error-box { display: none; margin-top: 0.75rem; padding: 0.75rem 1rem; background: var(--danger-lt); border: 0.5px solid #f09595; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--danger); }
+
+    #scanner-overlay { display: none; position: fixed; inset: 0; z-index: 300; background: rgba(10,30,20,0.94); flex-direction: column; align-items: center; justify-content: center; gap: 2rem; }
+    #scanner-overlay.active { display: flex; }
+    #bubble-canvas { position: absolute; inset: 0; pointer-events: none; }
+    .scanner-box { position: relative; width: min(340px,80vw); height: min(260px,50vw); border-radius: 16px; overflow: hidden; border: 1.5px solid rgba(45,180,110,0.5); animation: boxPulse 2.2s ease-in-out infinite; }
+    .scanner-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6) saturate(0.7); }
+    .scanner-box::before, .scanner-box::after { content: ''; position: absolute; width: 20px; height: 20px; border-color: #2db46e; border-style: solid; z-index: 2; }
+    .scanner-box::before { top: 8px; left: 8px; border-width: 2px 0 0 2px; border-radius: 3px 0 0 0; }
+    .scanner-box::after  { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; border-radius: 0 0 3px 0; }
+    .scanner-corner-tr, .scanner-corner-bl { position: absolute; width: 20px; height: 20px; border-color: #2db46e; border-style: solid; z-index: 2; }
+    .scanner-corner-tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; border-radius: 0 3px 0 0; }
+    .scanner-corner-bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; border-radius: 0 0 0 3px; }
+    .scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #2db46e, #5de8a0, #2db46e, transparent); box-shadow: 0 0 12px 3px rgba(45,180,110,0.6); animation: scanMove 2.2s ease-in-out infinite; z-index: 3; }
+    @keyframes scanMove { 0% { top: 0%; opacity: 0; } 5% { opacity: 1; } 95% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+    .scan-grid { position: absolute; inset: 0; z-index: 1; background-image: linear-gradient(rgba(45,180,110,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(45,180,110,0.06) 1px, transparent 1px); background-size: 20px 20px; }
+    @keyframes boxPulse { 0%, 100% { box-shadow: 0 0 30px rgba(26,92,64,0.35); } 50% { box-shadow: 0 0 55px rgba(26,92,64,0.6); } }
+    .scanner-label { color: #5de8a0; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; }
+    .scanner-sublabel { color: rgba(255,255,255,0.4); font-size: 0.75rem; letter-spacing: 0.06em; text-align: center; margin-top: 0.3rem; }
+    .scanner-dots { display: flex; gap: 6px; margin-top: 0.5rem; justify-content: center; }
+    .scanner-dots span { width: 6px; height: 6px; border-radius: 50%; background: #2db46e; animation: dotPulse 1.2s ease-in-out infinite; }
+    .scanner-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .scanner-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotPulse { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.1); } }
+    .scanner-progress-wrap { width: min(340px,80vw); height: 3px; background: rgba(255,255,255,0.1); border-radius: 100px; overflow: hidden; }
+    .scanner-progress-fill { height: 100%; background: linear-gradient(90deg, #1a5c40, #2db46e, #5de8a0); border-radius: 100px; width: 0%; transition: width 0.3s ease; }
+    .scanner-step { font-size: 0.78rem; color: rgba(255,255,255,0.5); letter-spacing: 0.04em; text-align: center; min-height: 1.2em; }
+
+    #curtain { display: none; position: fixed; inset: 0; z-index: 200; pointer-events: none; }
+    #curtain.visible { display: block; }
+    .curtain-half { position: absolute; top: 0; bottom: 0; width: 50%; background: #0d1f17; will-change: transform; }
+    .curtain-left  { left: 0; transform-origin: left center; }
+    .curtain-right { right: 0; transform-origin: right center; }
+    #curtain.closed .curtain-left  { transform: translateX(0); }
+    #curtain.closed .curtain-right { transform: translateX(0); }
+    #curtain.opening .curtain-left  { animation: curtainLeft  0.85s cubic-bezier(0.77,0,0.18,1) forwards; }
+    #curtain.opening .curtain-right { animation: curtainRight 0.85s cubic-bezier(0.77,0,0.18,1) forwards; }
+    @keyframes curtainLeft  { from { transform: translateX(0); }  to { transform: translateX(-100%); } }
+    @keyframes curtainRight { from { transform: translateX(0); }  to { transform: translateX(100%); } }
+    .curtain-seam { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: linear-gradient(to bottom, transparent, rgba(45,180,110,0.6) 20%, rgba(45,180,110,0.9) 50%, rgba(45,180,110,0.6) 80%, transparent); }
+    .curtain-glow { position: absolute; top: 0; bottom: 0; left: 50%; width: 40px; margin-left: -20px; background: radial-gradient(ellipse at center, rgba(45,180,110,0.15) 0%, transparent 70%); }
+    .curtain-scan { position: absolute; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(45,180,110,0.4) 20%, rgba(93,232,160,0.8) 50%, rgba(45,180,110,0.4) 80%, transparent 100%); animation: curtainScan 3s ease-in-out infinite; }
+    @keyframes curtainScan { 0% { top: 0%; } 100% { top: 100%; } }
+
+    #shatter-canvas { position: fixed; inset: 0; z-index: 210; pointer-events: none; display: none; }
+    #shatter-canvas.active { display: block; }
+
+    #results-page { display: none; position: fixed; inset: 0; z-index: 100; overflow-y: auto; background: var(--bg); transition: background 0.3s; }
+    #results-page.visible { display: block; }
+    #results-nav { background: var(--surface); border-bottom: 0.5px solid var(--border-md); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; transition: background 0.3s; }
+    .results-nav-left { display: flex; align-items: center; gap: 1rem; }
+    .back-btn { display: flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.85rem; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); background: transparent; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+    .back-btn:hover { background: var(--bg); }
+    .back-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+    #results-content { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    .results-header { margin-bottom: 1.75rem; }
+    .results-header h1 { font-family: 'DM Serif Display', serif; font-size: 1.75rem; font-weight: 400; margin-bottom: 0.25rem; }
+    .results-header p { font-size: 0.875rem; color: var(--muted); }
+
+    .patient-strip { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1.1rem; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 1.5rem; transition: background 0.3s; }
+    .patient-strip img { width: 52px; height: 52px; border-radius: 6px; object-fit: cover; border: 0.5px solid var(--border); }
+    .patient-strip-info .fname { font-size: 0.8rem; color: var(--muted); }
+    .patient-strip-info .condition { font-size: 0.95rem; font-weight: 600; color: var(--accent); }
+
+    .r-card { background: var(--surface); border-radius: var(--radius); border: 0.5px solid var(--border); overflow: hidden; margin-bottom: 1rem; opacity: 0; transform: translateY(20px); transition: opacity 0.4s ease, transform 0.4s ease, background 0.3s; }
+    .r-card.show { opacity: 1; transform: translateY(0); }
+    .r-card-head { padding: 0.875rem 1.25rem; border-bottom: 0.5px solid var(--border); font-size: 0.8rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; justify-content: space-between; }
+    .r-card-body { padding: 1.25rem; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+    .diag-hero { background: var(--accent-lt); border: 0.5px solid rgba(26,92,64,0.2); border-radius: var(--radius-sm); padding: 1.5rem; text-align: center; }
+    .diag-label { font-size: 0.72rem; font-weight: 500; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; }
+    .diag-condition { font-family: 'DM Serif Display', serif; font-size: 1.75rem; color: var(--accent); margin: 0.2rem 0 0.5rem; }
+    .severity-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.28rem 0.75rem; border-radius: 100px; font-size: 0.73rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .severity-badge.mild     { background: #e8f5ee; color: #1a5c40; border: 1px solid rgba(26,92,64,0.25); }
+    .severity-badge.moderate { background: var(--amber-lt); color: var(--amber); border: 1px solid rgba(133,79,11,0.25); }
+    .severity-badge.severe   { background: var(--danger-lt); color: var(--danger); border: 1px solid rgba(163,45,45,0.25); }
+    .severity-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .mild .severity-dot     { background: #1a5c40; }
+    .moderate .severity-dot { background: var(--amber); }
+    .severe .severity-dot   { background: var(--danger); }
+    .conf-wrap { margin: 0.75rem 0 0.25rem; }
+    .conf-labels { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.35rem; }
+    .conf-labels strong { color: var(--text); font-weight: 600; }
+    .conf-track { height: 8px; background: rgba(0,0,0,0.07); border-radius: 100px; overflow: hidden; }
+    .conf-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, #1a5c40, #2d8f64); transition: width 1.2s cubic-bezier(0.34,1.1,0.64,1); width: 0%; }
+    .conf-fill.moderate { background: linear-gradient(90deg, #854f0b, #c07820); }
+    .conf-fill.severe   { background: linear-gradient(90deg, #a32d2d, #c94040); }
+    .models-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.85rem; justify-content: center; }
+    .model-tag { font-size: 0.73rem; padding: 0.3rem 0.65rem; border-radius: 100px; background: var(--surface); border: 0.5px solid var(--border-md); color: var(--muted); display: flex; align-items: center; gap: 0.35rem; }
+    .model-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+    .model-dot.mismatch { background: var(--amber); }
+
+    .prob-list { display: flex; flex-direction: column; gap: 0.65rem; }
+    .prob-row { display: flex; flex-direction: column; gap: 0.2rem; }
+    .prob-meta { display: flex; justify-content: space-between; align-items: baseline; }
+    .prob-name { font-size: 0.8rem; font-weight: 500; }
+    .prob-pct  { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .prob-track-s { height: 5px; background: var(--bg); border-radius: 100px; overflow: hidden; }
+    .prob-fill-s { height: 100%; border-radius: 100px; background: var(--accent); transition: width 0.8s cubic-bezier(0.34,1.2,0.64,1); width: 0; }
+    .prob-fill-s.dim { background: var(--border-md); }
+
+    .charts-full-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 600px) { .charts-full-row { grid-template-columns: 1fr; } }
+    .chart-wrap { position: relative; height: 220px; width: 100%; }
+
+    .model-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    .model-table th { text-align: left; padding: 0.5rem 0.75rem; font-size: 0.72rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 0.5px solid var(--border); }
+    .model-table td { padding: 0.65rem 0.75rem; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+    .model-table tr:last-child td { border-bottom: none; }
+    .model-table tr:hover td { background: var(--bg); }
+    .agree-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; padding: 0.2rem 0.55rem; border-radius: 100px; font-weight: 500; }
+    .agree-badge.agree    { background: var(--accent-lt); color: var(--accent); }
+    .agree-badge.disagree { background: var(--amber-lt); color: var(--amber); }
+    .conf-mini { height: 4px; border-radius: 100px; background: var(--bg); margin-top: 3px; overflow: hidden; }
+    .conf-mini-fill { height: 100%; border-radius: 100px; background: var(--accent); }
+    .conf-mini-fill.mismatch { background: var(--amber); }
+
+    /* ── Ensemble GradCAM ── */
+    .ensemble-cam-wrap { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    .ensemble-cam-img-box { width: 100%; max-width: 420px; }
+    .ensemble-cam-img-box img { width: 100%; border-radius: var(--radius-sm); border: 0.5px solid var(--border); display: block; }
+    .ensemble-cam-label { font-size: 0.78rem; font-weight: 600; color: var(--accent); text-align: center; margin-top: 0.4rem; letter-spacing: 0.03em; text-transform: uppercase; }
+    .cam-legend { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.85rem; background: var(--bg); border-radius: var(--radius-sm); width: 100%; max-width: 420px; }
+    .cam-legend-bar { width: 80px; height: 8px; border-radius: 100px; flex-shrink: 0; }
+    .gradcam-bar { background: linear-gradient(90deg, #1a3aff, #00d4ff, #00ff88, #ffff00, #ff8800, #ff0000); }
+    .cam-legend p { font-size: 0.775rem; color: var(--muted); line-height: 1.4; }
+    .no-xai { display: flex; align-items: center; justify-content: center; height: 80px; background: var(--bg); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--muted); border: 0.5px dashed var(--border-md); width: 100%; max-width: 420px; }
+
+    .rec-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.85rem; }
+    .rec-icon { font-size: 1.1rem; }
+    .rec-header h3 { font-size: 0.9rem; font-weight: 600; }
+    .rec-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .rec-list li { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.845rem; line-height: 1.45; }
+    .rec-list li::before { content: '→'; color: var(--accent); font-weight: 600; flex-shrink: 0; margin-top: 0.05rem; }
+    .rec-urgency { margin-top: 0.85rem; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
+    .rec-urgency.low    { background: var(--accent-lt); color: var(--accent); }
+    .rec-urgency.medium { background: var(--amber-lt); color: var(--amber); }
+    .rec-urgency.high   { background: var(--danger-lt); color: var(--danger); }
+
+    .report-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 0.5px solid var(--border); }
+    .btn-outline { padding: 0.6rem 1rem; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); background: transparent; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; transition: background 0.15s; text-decoration: none; }
+    .btn-outline:hover { background: var(--bg); }
+    .btn-outline.teal { border-color: rgba(26,92,64,0.3); color: var(--accent); }
+    .btn-outline.teal:hover { background: var(--accent-lt); }
+
+    .disclaimer { display: flex; gap: 0.6rem; padding: 0.75rem 1rem; background: var(--amber-lt); border: 0.5px solid rgba(133,79,11,0.2); border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--amber); line-height: 1.5; margin-top: 0.5rem; }
+
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 400; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: var(--surface); border-radius: var(--radius); width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); transition: background 0.3s; }
+    .modal-head { padding: 1.25rem 1.5rem; border-bottom: 0.5px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-head h2 { font-size: 1rem; font-weight: 500; }
+    .modal-head p { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
+    .modal-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+    .form-group label { font-size: 0.78rem; font-weight: 500; color: var(--muted); }
+    .form-group input, .form-group select, .form-group textarea { padding: 0.55rem 0.75rem; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: var(--text); background: var(--bg); transition: border-color 0.15s, background 0.3s; width: 100%; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .modal-foot { padding: 1rem 1.5rem; border-top: 0.5px solid var(--border); display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+    #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast-item { background: var(--text); color: var(--bg); padding: 0.7rem 1.1rem; border-radius: var(--radius-sm); font-size: 0.85rem; animation: slideIn 0.3s ease; }
+    .toast-item.success { background: var(--accent); color: #fff; }
+    .toast-item.error   { background: var(--danger); color: #fff; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } nav .nav-links a:not(.active) { display: none; } }
+  </style>
+</head>
+<body>
+
+<script>
+  (function() {
+    const t = localStorage.getItem('dental-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+
+<nav id="main-nav">
+  <span class="nav-logo">DentAI</span>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/analyze" class="active">Analyze</a>
+    <a href="/history">History</a>
+    <a href="/settings">Settings</a>
+    <button onclick="toggleTheme()" id="theme-toggle" title="Toggle theme"
+      style="background:none;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:0.35rem 0.6rem;cursor:pointer;font-size:1rem;color:var(--muted);transition:all 0.15s;line-height:1;">🌙</button>
+    <a href="/auth/logout">Sign out</a>
+  </div>
+</nav>
+
+<div id="upload-page">
+  <div class="upload-wrapper">
+    <h1>Dental Analysis</h1>
+    <p class="subtitle">Upload a dental photograph to receive an AI-powered condition assessment.</p>
+    <div class="upload-card">
+      <div class="card-head">Upload Image</div>
+      <div class="card-body">
+        <div id="drop-zone">
+          <input type="file" id="file-input" accept="image/*" />
+          <div class="upload-icon">
+            <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4M8 8l4-4 4 4"/>
+            </svg>
+          </div>
+          <img id="preview-img" alt="Preview" />
+          <h3 id="upload-label">Drop image here or click to browse</h3>
+          <p>PNG, JPG, WEBP — max 10 MB</p>
+        </div>
+        <button class="btn-primary" id="analyze-btn" disabled>
+          <span class="spinner" id="btn-spinner"></span>
+          <span id="btn-text">Analyze Image</span>
+        </button>
+        <div id="error-box"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="scanner-overlay">
+  <canvas id="bubble-canvas"></canvas>
+  <div class="scanner-box">
+    <div class="scan-grid"></div>
+    <img class="scanner-img" id="scanner-preview-img" alt="" />
+    <div class="scanner-corner-tr"></div>
+    <div class="scanner-corner-bl"></div>
+    <div class="scan-line"></div>
+  </div>
+  <div>
+    <div class="scanner-label">Analyzing Dental Image</div>
+    <div class="scanner-sublabel" id="scanner-step-text">Initializing models…</div>
+    <div class="scanner-dots"><span></span><span></span><span></span></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;width:min(340px,80vw);">
+    <div class="scanner-progress-wrap"><div class="scanner-progress-fill" id="scan-progress"></div></div>
+    <div class="scanner-step" id="scan-step-detail">Loading ensemble…</div>
+  </div>
+</div>
+
+<div id="curtain">
+  <div class="curtain-half curtain-left"></div>
+  <div class="curtain-seam"></div>
+  <div class="curtain-glow"></div>
+  <div class="curtain-scan"></div>
+  <div class="curtain-half curtain-right"></div>
+</div>
+
+<canvas id="shatter-canvas"></canvas>
+
+<div id="results-page">
+  <div id="results-nav">
+    <div class="results-nav-left">
+      <button class="back-btn" id="back-btn">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        New Analysis
+      </button>
+      <span class="nav-logo" style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent);">DentAI</span>
+    </div>
+    <div class="nav-links">
+      <a href="/history">History</a>
+      <a href="/settings">Settings</a>
+      <button onclick="toggleTheme()" id="theme-toggle-results" title="Toggle theme"
+        style="background:none;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:0.35rem 0.6rem;cursor:pointer;font-size:1rem;color:var(--muted);transition:all 0.15s;line-height:1;">🌙</button>
+      <a href="/auth/logout">Sign out</a>
+    </div>
+  </div>
+  <div id="results-content">
+    <div class="results-header">
+      <h1>Analysis Report</h1>
+      <p id="results-subtitle">AI-powered dental condition assessment</p>
+    </div>
+    <div id="patient-strip-wrap"></div>
+    <div id="results-inner"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2 id="modal-title">Patient Information</h2><p id="modal-subtitle">This information will be printed on your report.</p></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Full Name *</label><input type="text" id="f-name" placeholder="e.g. Ayesha Malik" /></div>
+        <div class="form-group"><label>Email *</label><input type="email" id="f-email" placeholder="you@example.com" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Date of Birth</label><input type="date" id="f-dob" /></div>
+        <div class="form-group"><label>Age</label><input type="number" id="f-age" placeholder="e.g. 28" min="1" max="120" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Gender</label>
+          <select id="f-gender"><option value="">— Select —</option><option>Male</option><option>Female</option><option>Other</option><option>Prefer not to say</option></select>
+        </div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="f-phone" placeholder="+92 300 0000000" /></div>
+      </div>
+      <div class="form-group"><label>Medical History</label><textarea id="f-history" placeholder="e.g. Diabetes, Hypertension…"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Allergies</label><input type="text" id="f-allergies" placeholder="e.g. Penicillin" /></div>
+        <div class="form-group"><label>Current Medications</label><input type="text" id="f-meds" placeholder="e.g. Aspirin" /></div>
+      </div>
+      <div class="form-group"><label>Additional Notes</label><textarea id="f-notes" style="min-height:50px;"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" id="modal-submit-btn" style="width:auto;margin-top:0;" onclick="submitReport()">
+        <span id="modal-spinner" class="spinner"></span>
+        <span id="modal-btn-text">Generate Report</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ── DOM refs ── */
+const dropZone         = document.getElementById('drop-zone');
+const fileInput        = document.getElementById('file-input');
+const preview          = document.getElementById('preview-img');
+const uploadLabel      = document.getElementById('upload-label');
+const analyzeBtn       = document.getElementById('analyze-btn');
+const btnText          = document.getElementById('btn-text');
+const overlay          = document.getElementById('scanner-overlay');
+const bubbleCanvas     = document.getElementById('bubble-canvas');
+const scanProgress     = document.getElementById('scan-progress');
+const scanStepDetail   = document.getElementById('scan-step-detail');
+const scannerImg       = document.getElementById('scanner-preview-img');
+const curtain          = document.getElementById('curtain');
+const shatterCanvas    = document.getElementById('shatter-canvas');
+const resultsPage      = document.getElementById('results-page');
+const resultsInner     = document.getElementById('results-inner');
+const patientStripWrap = document.getElementById('patient-strip-wrap');
+const backBtn          = document.getElementById('back-btn');
+
+let selectedFile  = null;
+let currentScanId = null;
+let currentAction = null;
+let barChartInst  = null;
+let pieChartInst  = null;
+let bubbleAnim    = null;
+let progressTimer = null;
+
+/* ── Bubbles ── */
+const ctx2d = bubbleCanvas.getContext('2d');
+let bubbles = [];
+function resizeBubbleCanvas() { bubbleCanvas.width = window.innerWidth; bubbleCanvas.height = window.innerHeight; }
+function spawnBubble() { const size = 6 + Math.random()*18; bubbles.push({ x: Math.random()*bubbleCanvas.width, y: bubbleCanvas.height+size, r: size, speed: 0.6+Math.random()*1.2, drift: (Math.random()-0.5)*0.5, alpha: 0.15+Math.random()*0.3, hue: 130+Math.random()*40 }); }
+function drawBubbles() {
+  ctx2d.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
+  bubbles.forEach(b => {
+    ctx2d.beginPath(); ctx2d.arc(b.x, b.y, b.r, 0, Math.PI*2);
+    ctx2d.strokeStyle = `hsla(${b.hue},70%,60%,${b.alpha})`; ctx2d.lineWidth = 1.2; ctx2d.stroke();
+    b.y -= b.speed; b.x += b.drift; b.alpha -= 0.0008;
+  });
+  bubbles = bubbles.filter(b => b.y+b.r > 0 && b.alpha > 0);
+}
+function startBubbles() { resizeBubbleCanvas(); overlay._spawnInterval = setInterval(spawnBubble, 120); function loop() { drawBubbles(); bubbleAnim = requestAnimationFrame(loop); } loop(); }
+function stopBubbles() { cancelAnimationFrame(bubbleAnim); clearInterval(overlay._spawnInterval); bubbles = []; }
+
+const STEPS = [
+  [0,  'Loading 3-model ensemble…'],
+  [12, 'ResNet18 — forward pass…'],
+  [28, 'DenseNet121 — forward pass…'],
+  [44, 'EfficientNetV2 — forward pass…'],
+  [58, 'Computing GradCAM per model…'],
+  [70, 'Generating ensemble GradCAM…'],
+  [90, 'Aggregating predictions…'],
+  [96, 'Building report…'],
+];
+let stepIdx = 0;
+function startProgress() {
+  stepIdx = 0; scanProgress.style.width = '0%'; scanStepDetail.textContent = STEPS[0][1];
+  progressTimer = setInterval(() => {
+    stepIdx++;
+    if (stepIdx >= STEPS.length) { clearInterval(progressTimer); return; }
+    const [pct, label] = STEPS[stepIdx];
+    scanProgress.style.width = pct + '%'; scanStepDetail.textContent = label;
+  }, 1100);
+}
+function stopProgress() { clearInterval(progressTimer); scanProgress.style.width = '100%'; scanStepDetail.textContent = 'Complete!'; }
+function showOverlay() { if (selectedFile) scannerImg.src = URL.createObjectURL(selectedFile); overlay.classList.add('active'); startBubbles(); startProgress(); }
+function hideOverlay() { stopProgress(); stopBubbles(); overlay.classList.remove('active'); ctx2d.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height); }
+window.addEventListener('resize', resizeBubbleCanvas);
+
+function showCurtain() { curtain.classList.add('visible','closed'); curtain.style.pointerEvents = 'all'; }
+function openCurtain(callback) {
+  curtain.classList.remove('opening'); curtain.classList.add('visible','closed'); curtain.style.pointerEvents = 'all';
+  setTimeout(() => {
+    curtain.classList.remove('closed'); curtain.classList.add('opening');
+    if (callback) setTimeout(callback, 850);
+    setTimeout(() => { curtain.classList.remove('visible','opening','closed'); curtain.style.pointerEvents = 'none'; }, 900);
+  }, 80);
+}
+
+function doShatter(callback) {
+  const sc = shatterCanvas, sctx = sc.getContext('2d');
+  sc.width = window.innerWidth; sc.height = window.innerHeight;
+  sc.classList.add('active');
+  const W = sc.width, H = sc.height, numFrags = 55, frags = [], seeds = [];
+  for (let i = 0; i < numFrags; i++) seeds.push({ x: Math.random()*W, y: Math.random()*H });
+  for (let i = 0; i < numFrags; i++) {
+    const cx = seeds[i].x, cy = seeds[i].y, numSides = 3+Math.floor(Math.random()*3), pts = [], baseR = 80+Math.random()*120;
+    for (let s = 0; s < numSides; s++) { const angle = (s/numSides)*Math.PI*2+Math.random()*0.8, r = baseR*(0.5+Math.random()*0.8); pts.push({x:cx+Math.cos(angle)*r, y:cy+Math.sin(angle)*r}); }
+    frags.push({ cx, cy, pts, dx: (cx-W/2)*0.025+(Math.random()-0.5)*6, dy: (cy-H/2)*0.025+(Math.random()-0.5)*4+1, drot: (Math.random()-0.5)*0.18, rot: 0, alpha: 1, shade: Math.floor(10+Math.random()*20) });
+  }
+  let frame = 0;
+  function animShatter() {
+    sctx.clearRect(0, 0, W, H); let allGone = true;
+    frags.forEach(f => {
+      if (f.alpha <= 0) return; allGone = false;
+      f.cx += f.dx; f.cy += f.dy; f.dy += 0.35; f.rot += f.drot; f.alpha = Math.max(0, f.alpha-0.022);
+      sctx.save(); sctx.translate(f.cx, f.cy); sctx.rotate(f.rot); sctx.globalAlpha = f.alpha;
+      sctx.beginPath();
+      sctx.moveTo(f.pts[0].x-f.cx, f.pts[0].y-f.cy);
+      for (let p = 1; p < f.pts.length; p++) sctx.lineTo(f.pts[p].x-f.cx, f.pts[p].y-f.cy);
+      sctx.closePath(); sctx.fillStyle = `hsl(148,40%,${f.shade}%)`; sctx.fill();
+      sctx.strokeStyle = 'rgba(45,180,110,0.3)'; sctx.lineWidth = 0.8; sctx.stroke(); sctx.restore();
+    });
+    frame++;
+    if (frame < 55 && !allGone) { requestAnimationFrame(animShatter); }
+    else { sc.classList.remove('active'); sctx.clearRect(0,0,W,H); if (callback) callback(); }
+  }
+  requestAnimationFrame(animShatter);
+}
+
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragging'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragging'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+function handleFile(file) { selectedFile = file; preview.src = URL.createObjectURL(file); preview.classList.add('visible'); uploadLabel.textContent = file.name; analyzeBtn.disabled = false; hideError(); currentScanId = null; }
+
+analyzeBtn.addEventListener('click', runAnalysis);
+async function runAnalysis() {
+  if (!selectedFile) return;
+  setLoading(true); hideError(); showOverlay();
+  if (barChartInst) { barChartInst.destroy(); barChartInst = null; }
+  if (pieChartInst) { pieChartInst.destroy(); pieChartInst = null; }
+  const fd = new FormData();
+  fd.append('image', selectedFile);
+  try {
+    const res  = await fetch('/analyze', { method: 'POST', body: fd });
+    const data = await res.json();
+    hideOverlay();
+    if (!res.ok) { showError(data.error || 'An error occurred.'); setLoading(false); return; }
+    currentScanId = data.scan_id;
+    renderResults(data);
+    showCurtain(); resultsPage.classList.add('visible');
+    setTimeout(() => {
+      openCurtain(() => {
+        const cards = resultsInner.querySelectorAll('.r-card');
+        cards.forEach((c, i) => setTimeout(() => c.classList.add('show'), i * 70));
+        setTimeout(() => animateMetrics(data), 300);
+      });
+    }, 200);
+  } catch (err) { hideOverlay(); showError('Network error. Please try again.'); }
+  finally { setLoading(false); }
+}
+
+backBtn.addEventListener('click', () => {
+  doShatter(() => {
+    resultsPage.classList.remove('visible');
+    analyzeBtn.disabled = true; preview.classList.remove('visible'); preview.src = '';
+    uploadLabel.textContent = 'Drop image here or click to browse'; fileInput.value = ''; selectedFile = null;
+  });
+});
+
+const RECOMMENDATIONS = {
+  'Dental Caries':       { icon:'🦠', tips:['Schedule a dental appointment for cavity assessment and filling','Brush twice daily with fluoride toothpaste','Reduce sugary and acidic food and drink intake','Ask your dentist about fluoride varnish or sealants'], urgency:'medium', urgencyText:'⏱ Recommended: Visit a dentist within 2–4 weeks' },
+  'Calculus':            { icon:'🪨', tips:['Professional scaling and cleaning required','Brush at 45-degree angle along the gum line','Floss daily to prevent further buildup','Schedule professional cleaning every 6 months'], urgency:'medium', urgencyText:'⏱ Recommended: Professional cleaning within 2–3 weeks' },
+  'Gingivitis':          { icon:'🔴', tips:['Improve brushing and flossing technique immediately','Use antibacterial mouthwash such as chlorhexidine','Avoid smoking — worsens gum disease significantly','See a dentist to prevent progression to periodontitis'], urgency:'medium', urgencyText:'⏱ Recommended: Dental visit within 1–2 weeks' },
+  'Mouth Ulcer':         { icon:'⚠️', tips:['Avoid spicy, acidic and rough-textured foods','Use a soft-bristled toothbrush until healed','Apply topical anaesthetic gel for pain relief if needed','See a dentist if ulcer persists beyond 2 weeks'], urgency:'low', urgencyText:'✓ Monitor for 2 weeks — consult dentist if not healed' },
+  'Tooth Discoloration': { icon:'🌗', tips:['Consult a dentist to identify intrinsic vs extrinsic staining','Reduce coffee, tea and tobacco causing surface staining','Professional whitening under dental supervision only','Good oral hygiene prevents further discolouration'], urgency:'low', urgencyText:'✓ Not urgent — schedule a routine dental consultation' },
+  'hypodontia':          { icon:'🦷', tips:['Consult an orthodontist or prosthodontist for a treatment plan','Options: dental implants, bridges or orthodontic space management','Early diagnosis leads to better outcomes — do not delay','Maintain excellent hygiene for existing teeth'], urgency:'high', urgencyText:'⚠ Recommended: Specialist consultation as soon as possible' },
+  'Data caries':         { icon:'🦠', tips:['Schedule a dental appointment for cavity assessment','Brush twice daily with fluoride toothpaste','Reduce sugary food and drink intake','Ask your dentist about fluoride varnish or sealants'], urgency:'medium', urgencyText:'⏱ Recommended: Visit a dentist within 2–4 weeks' },
+};
+function getRec(condition) {
+  if (RECOMMENDATIONS[condition]) return RECOMMENDATIONS[condition];
+  for (const key of Object.keys(RECOMMENDATIONS)) { if (condition.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(condition.toLowerCase())) return RECOMMENDATIONS[key]; }
+  return { icon:'🦷', tips:['Consult a licensed dentist for a full clinical evaluation','Maintain regular brushing and flossing','A professional examination is recommended'], urgency:'medium', urgencyText:'⏱ Recommended: Schedule a dental appointment soon' };
+}
+function getSeverity(conf) {
+  if (conf >= 80) return { label:'High Confidence', cls:'severe' };
+  if (conf >= 60) return { label:'Moderate Confidence', cls:'moderate' };
+  return                  { label:'Low Confidence', cls:'mild' };
+}
+
+function renderResults(d) {
+  const sorted   = Object.entries(d.all_probabilities).sort((a,b) => b[1]-a[1]);
+  const topCls   = d.predicted_class;
+  const models   = d.individual_predictions;
+  const confs    = d.individual_confidences || {};
+  const conf     = d.confidence;
+  const severity = getSeverity(conf);
+  const rec      = getRec(topCls);
+  const gradcam  = d.gradcam || {};
+  const agreeCount  = Object.values(models).filter(c => c===topCls).length;
+  const totalModels = Object.keys(models).length;
+
+  patientStripWrap.innerHTML = `<div class="patient-strip">
+    <img src="${URL.createObjectURL(selectedFile)}" alt="Uploaded image" />
+    <div class="patient-strip-info">
+      <div class="fname">${selectedFile.name}</div>
+      <div class="condition">${topCls}</div>
+    </div>
+    <span class="severity-badge ${severity.cls}"><span class="severity-dot"></span>${severity.label}</span>
+  </div>`;
+
+  const modelTags = Object.entries(models).map(([name, cls]) =>
+    `<div class="model-tag"><span class="model-dot${cls===topCls?'':' mismatch'}"></span><strong>${name}</strong>: ${cls}</div>`
+  ).join('');
+
+  const bars = sorted.map(([cls, pct]) =>
+    `<div class="prob-row">
+      <div class="prob-meta"><span class="prob-name">${cls}</span><span class="prob-pct">${pct.toFixed(1)}%</span></div>
+      <div class="prob-track-s"><div class="prob-fill-s${cls===topCls?'':' dim'}" data-width="${pct}" style="width:0%"></div></div>
+    </div>`
+  ).join('');
+
+  const tableRows = Object.entries(models).map(([name, cls]) => {
+    const agree = cls === topCls;
+    const mc = confs[name] ? confs[name].toFixed(1) : '—';
+    return `<tr>
+      <td><strong>${name}</strong></td><td>${cls}</td>
+      <td><div style="font-size:.8rem;font-weight:500;">${mc}%</div><div class="conf-mini"><div class="conf-mini-fill${agree?'':' mismatch'}" style="width:${mc}%"></div></div></td>
+      <td><span class="agree-badge ${agree?'agree':'disagree'}">${agree?'✓ Agrees':'≠ Differs'}</span></td>
+    </tr>`;
+  }).join('');
+
+  /* ── Ensemble-only GradCAM block ── */
+  const ensembleCamHTML = gradcam.ensemble
+    ? `<div class="ensemble-cam-img-box">
+         <img src="data:image/png;base64,${gradcam.ensemble}" alt="Ensemble GradCAM" />
+         <div class="ensemble-cam-label">⭐ Ensemble GradCAM</div>
+       </div>`
+    : `<div class="no-xai">Ensemble heatmap not available</div>`;
+
+  const reportButtons = d.scan_id ? `
+    <div style="margin-top:1.25rem;border-top:0.5px solid var(--border);padding-top:1.25rem;">
+      <div style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;">📄 Get Your Report</div>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+        <button onclick="openModal('pdf')" style="flex:1;min-width:140px;padding:0.75rem 1rem;border:none;border-radius:var(--radius-sm);background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Download PDF
+        </button>
+        <button onclick="openModal('email')" style="flex:1;min-width:140px;padding:0.75rem 1rem;border:0.5px solid rgba(26,92,64,0.4);border-radius:var(--radius-sm);background:transparent;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+          Email Report
+        </button>
+      </div>
+    </div>` : '';
+
+  resultsInner.innerHTML = `
+    <div class="two-col">
+      <div class="r-card">
+        <div class="r-card-head">Diagnosis</div>
+        <div class="r-card-body">
+          <div class="diag-hero">
+            <div class="diag-label">Detected Condition</div>
+            <div class="diag-condition">${topCls}</div>
+            <span class="severity-badge ${severity.cls}"><span class="severity-dot"></span>${severity.label}</span>
+            <div class="conf-wrap">
+              <div class="conf-labels"><span>AI Confidence</span><strong>${conf.toFixed(1)}%</strong></div>
+              <div class="conf-track"><div class="conf-fill ${severity.cls}" id="conf-fill" style="width:0%"></div></div>
+            </div>
+            ${d.tooth_area ? `<div style="margin-top:0.6rem;font-size:0.8rem;font-weight:600;color:var(--accent);">📍 Affected Region: ${d.tooth_area}</div>` : ''}
+          </div>
+          <div class="models-row">${modelTags}</div>
+        </div>
+      </div>
+      <div class="r-card">
+        <div class="r-card-head">Class Probabilities</div>
+        <div class="r-card-body"><div class="prob-list">${bars}</div></div>
+      </div>
+    </div>
+
+    <div class="r-card">
+      <div class="r-card-head">Probability Analysis <span style="font-size:.72rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Model Agreement — ${agreeCount}/${totalModels}</span></div>
+      <div class="r-card-body">
+        <div class="charts-full-row">
+          <div><div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">All Classes</div><div class="chart-wrap"><canvas id="bar-chart"></canvas></div></div>
+          <div><div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Model Consensus</div><div class="chart-wrap"><canvas id="pie-chart"></canvas></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="r-card">
+      <div class="r-card-head">Model Breakdown</div>
+      <div class="r-card-body" style="padding:0;">
+        <table class="model-table"><thead><tr><th>Model</th><th>Prediction</th><th>Confidence</th><th>Consensus</th></tr></thead><tbody>${tableRows}</tbody></table>
+      </div>
+    </div>
+
+    <div class="r-card">
+      <div class="r-card-head">
+        XAI Explainability
+        <span style="font-size:.72rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Ensemble GradCAM</span>
+      </div>
+      <div class="r-card-body">
+        <div class="ensemble-cam-wrap">
+          ${ensembleCamHTML}
+          <div class="cam-legend">
+            <div class="cam-legend-bar gradcam-bar"></div>
+            <p>Red/yellow = high AI attention. Blue = low attention. Ensemble heatmap combines all 3 model GradCAMs weighted by their ensemble scores.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="r-card">
+      <div class="r-card-head">Recommended Actions</div>
+      <div class="r-card-body">
+        <div class="rec-header"><span class="rec-icon">${rec.icon}</span><h3>${topCls} — What To Do Next</h3></div>
+        <ul class="rec-list">${rec.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+        <div class="rec-urgency ${rec.urgency}">${rec.urgencyText}</div>
+        ${reportButtons}
+      </div>
+    </div>
+
+    <div class="disclaimer r-card">
+      <span>⚠️</span>
+      <span>This is an AI-generated screening result, not a medical diagnosis. Always consult a licensed dental professional before making any clinical decisions.</span>
+    </div>`;
+}
+
+function animateMetrics(d) {
+  const conf   = d.confidence;
+  const sorted = Object.entries(d.all_probabilities).sort((a,b) => b[1]-a[1]);
+  const fill   = document.getElementById('conf-fill');
+  if (fill) fill.style.width = conf + '%';
+  document.querySelectorAll('.prob-fill-s[data-width]').forEach(el => { el.style.width = el.dataset.width + '%'; });
+  if (barChartInst) barChartInst.destroy();
+  if (pieChartInst) pieChartInst.destroy();
+  const topCls = d.predicted_class, models = d.individual_predictions;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const tickColor = isDark ? '#8b8680' : '#6b6760';
+  const barCtx = document.getElementById('bar-chart');
+  if (barCtx) {
+    barChartInst = new Chart(barCtx, {
+      type: 'bar',
+      data: { labels: sorted.map(([cls])=>cls), datasets: [{ data: sorted.map(([,pct])=>pct), backgroundColor: sorted.map(([cls])=>cls===topCls?'#2d9e6b':'#555'), borderRadius: 4, borderSkipped: false }] },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x.toFixed(1)}%`}} }, scales: { x: { max:100, grid:{color:'rgba(128,128,128,0.08)'}, ticks:{font:{size:11,family:'DM Sans'},callback:v=>v+'%',color:tickColor}, border:{display:false} }, y: { grid:{display:false}, ticks:{font:{size:11,family:'DM Sans'},color:tickColor}, border:{display:false} } } }
+    });
+  }
+  const pieCtx = document.getElementById('pie-chart');
+  if (pieCtx) {
+    const modelEntries = Object.entries(models);
+    pieChartInst = new Chart(pieCtx, {
+      type: 'doughnut',
+      data: { labels: modelEntries.map(([name,cls])=>`${name}: ${cls}`), datasets: [{ data: modelEntries.map(()=>1), backgroundColor: modelEntries.map(([,cls])=>cls===topCls?'#2d9e6b':'#854f0b'), borderWidth: 2, borderColor: isDark ? '#1a1d27' : '#fff', hoverOffset: 6 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right', labels: { font:{size:11,family:'DM Sans'}, boxWidth:12, padding:12, color:tickColor } }, tooltip: { callbacks:{label:ctx=>` ${ctx.label}`} } } }
+    });
+  }
+}
+
+async function openModal(action) {
+  currentAction = action;
+  document.getElementById('modal-title').textContent    = action==='pdf' ? 'Patient Details — Download PDF' : 'Patient Details — Email Report';
+  document.getElementById('modal-subtitle').textContent = action==='pdf' ? 'This information will be printed on your PDF report.' : 'Enter the email address where the report should be sent.';
+  document.getElementById('modal-btn-text').textContent = action==='pdf' ? 'Download PDF' : 'Send Report';
+  document.getElementById('modal').classList.add('open');
+  try {
+    const res = await fetch('/patient-profile');
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('f-name').value      = data.name                || '';
+      document.getElementById('f-email').value     = data.email               || '';
+      document.getElementById('f-dob').value       = data.dob                 || '';
+      document.getElementById('f-age').value       = data.age                 || '';
+      document.getElementById('f-gender').value    = data.gender              || '';
+      document.getElementById('f-phone').value     = data.phone               || '';
+      document.getElementById('f-history').value   = data.medical_history     || '';
+      document.getElementById('f-allergies').value = data.allergies           || '';
+      document.getElementById('f-meds').value      = data.current_medications || '';
+      document.getElementById('f-notes').value     = data.notes               || '';
+    }
+  } catch(e) {}
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); currentAction = null; setModalLoading(false); }
+async function submitReport() {
+  if (!currentScanId || !currentAction) return;
+  const name = document.getElementById('f-name').value.trim(), email = document.getElementById('f-email').value.trim();
+  if (!name)  { showToast('Please enter your name.', 'error'); return; }
+  if (!email) { showToast('Please enter your email.', 'error'); return; }
+  const fd = new FormData();
+  fd.append('name',name); fd.append('email',email); fd.append('dob',document.getElementById('f-dob').value);
+  fd.append('age',document.getElementById('f-age').value); fd.append('gender',document.getElementById('f-gender').value);
+  fd.append('phone',document.getElementById('f-phone').value); fd.append('medical_history',document.getElementById('f-history').value);
+  fd.append('allergies',document.getElementById('f-allergies').value); fd.append('current_medications',document.getElementById('f-meds').value);
+  fd.append('notes',document.getElementById('f-notes').value);
+  setModalLoading(true);
+  if (currentAction === 'pdf') {
+    const form = document.createElement('form'); form.method='POST'; form.action=`/report/pdf/${currentScanId}`; form.target='_blank';
+    for (const [k,v] of fd.entries()) { const inp=document.createElement('input'); inp.type='hidden'; inp.name=k; inp.value=v; form.appendChild(inp); }
+    document.body.appendChild(form); form.submit(); document.body.removeChild(form);
+    setModalLoading(false); closeModal(); showToast('PDF download started!', 'success');
+  } else {
+    try {
+      const res = await fetch(`/report/email/${currentScanId}`, { method:'POST', body:fd });
+      const data = await res.json();
+      if (!res.ok) showToast(data.error || 'Email failed.', 'error');
+      else { showToast(data.message || 'Report sent!', 'success'); closeModal(); }
+    } catch(e) { showToast('Network error.', 'error'); }
+    finally { setModalLoading(false); }
+  }
+}
+function setModalLoading(on) { document.getElementById('modal-submit-btn').disabled=on; document.getElementById('modal-spinner').style.display=on?'block':'none'; }
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next    = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('dental-theme', next);
+  const icon = next === 'dark' ? '☀️' : '🌙';
+  const b1 = document.getElementById('theme-toggle');
+  const b2 = document.getElementById('theme-toggle-results');
+  if (b1) b1.textContent = icon;
+  if (b2) b2.textContent = icon;
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const t = localStorage.getItem('dental-theme') || 'light';
+  const icon = t === 'dark' ? '☀️' : '🌙';
+  const b1 = document.getElementById('theme-toggle');
+  const b2 = document.getElementById('theme-toggle-results');
+  if (b1) b1.textContent = icon;
+  if (b2) b2.textContent = icon;
+});
+function setLoading(on) { analyzeBtn.disabled=on; analyzeBtn.classList.toggle('loading',on); document.getElementById('btn-spinner').style.display=on?'block':'none'; btnText.textContent=on?'Analyzing…':'Analyze Image'; }
+function showError(msg) { const eb=document.getElementById('error-box'); eb.textContent=msg; eb.style.display='block'; }
+function hideError()    { const eb=document.getElementById('error-box'); eb.style.display='none'; eb.textContent=''; }
+function showToast(msg, type='') { const t=document.getElementById('toast'); const div=document.createElement('div'); div.className='toast-item '+type; div.textContent=msg; t.appendChild(div); setTimeout(()=>div.remove(),3500); }
+</script>
+</body>
+</html>
